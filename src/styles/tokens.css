@@ -1,0 +1,132 @@
+/**
+ * PAWELLE Luxury Pet Grooming & Spa
+ * Design System Tokens
+ */
+
+:root {
+  /* Brand Core Colors (Light Theme) */
+  --color-bg-primary: #F4F0E7;
+  --color-bg-surface: #FFFEFB;
+  --color-bg-elevated: #FFFFFF;
+  --color-bg-subtle: #EFE9DC;
+  
+  --color-forest: #283B32;
+  --color-forest-dark: #1E2D26;
+  --color-forest-light: #374E43;
+  --color-forest-soft: rgba(40, 59, 50, 0.08);
+
+  --color-sand: #D6C7AD;
+  --color-sand-light: #E7DDCA;
+  --color-sand-muted: #BCAC91;
+  --color-sand-soft: rgba(214, 199, 173, 0.25);
+
+  --color-terracotta: #A65B46;
+  --color-terracotta-hover: #8F4C39;
+  --color-terracotta-soft: rgba(166, 91, 70, 0.12);
+
+  --color-text-primary: #292C29;
+  --color-text-secondary: #77766E;
+  --color-text-muted: #96948A;
+  --color-text-inverse: #FFFEFB;
+
+  --color-border: #E5DED2;
+  --color-border-subtle: #EFE9DE;
+  --color-border-strong: #D3C9BC;
+
+  /* Functional Status Colors */
+  --color-success: #2C6E49;
+  --color-success-bg: #EAF4EE;
+  --color-warning: #B87A1E;
+  --color-warning-bg: #FDF4E7;
+  --color-danger: #A33B32;
+  --color-danger-bg: #FBECEB;
+  --color-info: #35627A;
+  --color-info-bg: #EBF3F7;
+
+  /* Typography */
+  --font-heading: 'Fraunces', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Spacing Scale (4px-based) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Layout */
+  --container-max-width: 1280px;
+  --container-narrow-width: 860px;
+  --container-padding: 24px;
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 9999px;
+
+  /* Shadows (Restrained, subtle, warm) */
+  --shadow-sm: 0 2px 4px rgba(40, 59, 50, 0.04);
+  --shadow-md: 0 6px 18px rgba(40, 59, 50, 0.06);
+  --shadow-lg: 0 14px 34px rgba(40, 59, 50, 0.09);
+  --shadow-warm: 0 10px 25px rgba(166, 91, 70, 0.08);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* Dark Mode Tokens */
+[data-theme="dark"] {
+  --color-bg-primary: #141916;
+  --color-bg-surface: #1B231F;
+  --color-bg-elevated: #242E29;
+  --color-bg-subtle: #19201C;
+
+  --color-forest: #3E5A4D;
+  --color-forest-dark: #2F453B;
+  --color-forest-light: #527564;
+  --color-forest-soft: rgba(82, 117, 100, 0.2);
+
+  --color-sand: #C9BBA0;
+  --color-sand-light: #DCD1BD;
+  --color-sand-muted: #9F937C;
+  --color-sand-soft: rgba(201, 187, 160, 0.15);
+
+  --color-terracotta: #C4745E;
+  --color-terracotta-hover: #D78670;
+  --color-terracotta-soft: rgba(196, 116, 94, 0.2);
+
+  --color-text-primary: #F5F1E8;
+  --color-text-secondary: #AAA69C;
+  --color-text-muted: #7E7B74;
+  --color-text-inverse: #141916;
+
+  --color-border: #2A3630;
+  --color-border-subtle: #202A25;
+  --color-border-strong: #384941;
+
+  --color-success: #4BA873;
+  --color-success-bg: rgba(75, 168, 115, 0.15);
+  --color-warning: #E0A03C;
+  --color-warning-bg: rgba(224, 160, 60, 0.15);
+  --color-danger: #D95D52;
+  --color-danger-bg: rgba(217, 93, 82, 0.15);
+  --color-info: #5B95B5;
+  --color-info-bg: rgba(91, 149, 181, 0.15);
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.5);
+  --shadow-warm: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
