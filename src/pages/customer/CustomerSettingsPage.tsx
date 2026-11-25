@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../features/authentication/AuthContext';
-import { User, Phone, Mail, Lock, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
+
+export const getSettingsPrefsKey = (userId?: string | null) =>
+  userId ? `pawelle_notification_prefs_${userId}` : '';
 
 export const CustomerSettingsPage: React.FC = () => {
   const { user, updateProfile } = useAuth();
+  const userId = user?.id || '';
 
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -11,9 +15,40 @@ export const CustomerSettingsPage: React.FC = () => {
   const [smsNotifications, setSmsNotifications] = useState(true);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  useEffect(() => {
+    setFullName(user?.full_name || '');
+    setPhone(user?.phone || '');
+    setSavedSuccess(false);
+    try {
+      if (userId && typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem(getSettingsPrefsKey(userId));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setEmailNotifications(typeof parsed.emailNotifications === 'boolean' ? parsed.emailNotifications : true);
+          setSmsNotifications(typeof parsed.smsNotifications === 'boolean' ? parsed.smsNotifications : true);
+          return;
+        }
+      }
+    } catch {
+      // ignore storage read error
+    }
+    setEmailNotifications(true);
+    setSmsNotifications(true);
+  }, [userId, user?.full_name, user?.phone]);
+
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile({ full_name: fullName, phone });
+    try {
+      if (userId && typeof localStorage !== 'undefined') {
+        localStorage.setItem(
+          getSettingsPrefsKey(userId),
+          JSON.stringify({ emailNotifications, smsNotifications })
+        );
+      }
+    } catch {
+      // ignore storage write error
+    }
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
   };
@@ -56,7 +91,7 @@ export const CustomerSettingsPage: React.FC = () => {
               disabled
               value={user?.email || 'customer@pawelle.com'}
               className="form-input"
-              style={{ opacity: 0.7, backgroundColor: 'rgba(0,0,0,0.03)' }}
+              style={{ opacity: 0.78, backgroundColor: 'var(--color-bg-subtle)', cursor: 'not-allowed' }}
             />
           </div>
 

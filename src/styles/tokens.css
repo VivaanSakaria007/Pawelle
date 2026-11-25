@@ -1,6 +1,6 @@
 /**
  * PAWELLE Luxury Pet Grooming & Spa
- * Design System Tokens
+ * Design System Tokens (WCAG 2.2 AA Compliant)
  */
 
 :root {
@@ -25,23 +25,65 @@
   --color-terracotta-soft: rgba(166, 91, 70, 0.12);
 
   --color-text-primary: #292C29;
-  --color-text-secondary: #77766E;
-  --color-text-muted: #96948A;
+  --color-text-secondary: #575A56;
+  --color-text-muted: #727670;
   --color-text-inverse: #FFFEFB;
 
   --color-border: #E5DED2;
   --color-border-subtle: #EFE9DE;
   --color-border-strong: #D3C9BC;
 
-  /* Functional Status Colors */
-  --color-success: #2C6E49;
+  /* Dedicated Semantic Surfaces (Light Theme) */
+  --color-hero-accent-bg: #ECE5D8;
+  --color-cta-bg: #283B32;
+  --color-cta-text: #FFFEFB;
+  --color-cta-text-muted: #E7DDCA;
+  --color-cta-border: rgba(214, 199, 173, 0.2);
+
+  --color-footer-bg: #1B2922;
+  --color-footer-text: #FFFEFB;
+  --color-footer-text-secondary: #D6C7AD;
+  --color-footer-text-muted: #BCAC91;
+  --color-footer-border: rgba(214, 199, 173, 0.16);
+  --color-footer-badge-bg: rgba(214, 199, 173, 0.12);
+  --color-footer-input-bg: rgba(255, 255, 255, 0.08);
+
+  /* Functional Status Colors (Light Theme - 4.5:1+ contrast) */
+  --color-success: #20603D;
   --color-success-bg: #EAF4EE;
-  --color-warning: #B87A1E;
+  --color-warning: #945B0D;
   --color-warning-bg: #FDF4E7;
-  --color-danger: #A33B32;
+  --color-danger: #9B2C24;
   --color-danger-bg: #FBECEB;
-  --color-info: #35627A;
+  --color-info: #23526E;
   --color-info-bg: #EBF3F7;
+
+  /* Dedicated Semantic Button Tokens (Light Theme) */
+  --btn-primary-bg: #283B32;
+  --btn-primary-text: #FFFEFB;
+  --btn-primary-border: #283B32;
+  --btn-primary-hover-bg: #1B2922;
+  --btn-primary-hover-text: #FFFEFB;
+  --btn-primary-hover-border: #1B2922;
+
+  --btn-secondary-bg: transparent;
+  --btn-secondary-text: #283B32;
+  --btn-secondary-border: #283B32;
+  --btn-secondary-hover-bg: rgba(40, 59, 50, 0.08);
+  --btn-secondary-hover-text: #1B2922;
+  --btn-secondary-hover-border: #1B2922;
+
+  --btn-terracotta-bg: #A65B46;
+  --btn-terracotta-text: #FFFEFB;
+  --btn-terracotta-border: #A65B46;
+  --btn-terracotta-hover-bg: #8F4C39;
+  --btn-terracotta-hover-text: #FFFEFB;
+  --btn-terracotta-hover-border: #8F4C39;
+
+  --btn-ghost-bg: transparent;
+  --btn-ghost-text: var(--color-text-primary);
+  --btn-ghost-hover-bg: var(--color-forest-soft);
+  --btn-ghost-hover-text: var(--color-forest);
 
   /* Typography */
   --font-heading: 'Fraunces', Georgia, serif;
@@ -86,47 +128,91 @@
   --transition-slow: 400ms ease;
 }
 
-/* Dark Mode Tokens */
+/* Dark Mode Tokens (Night Sanctuary - WCAG 2.2 AA Contrast Verified) */
 [data-theme="dark"] {
-  --color-bg-primary: #141916;
-  --color-bg-surface: #1B231F;
-  --color-bg-elevated: #242E29;
-  --color-bg-subtle: #19201C;
+  --color-bg-primary: #121815;
+  --color-bg-surface: #1A221E;
+  --color-bg-elevated: #222C27;
+  --color-bg-subtle: #161F1A;
 
-  --color-forest: #3E5A4D;
-  --color-forest-dark: #2F453B;
-  --color-forest-light: #527564;
-  --color-forest-soft: rgba(82, 117, 100, 0.2);
+  /* Luminous sage green brand accent - 8.8:1 contrast on dark bg */
+  --color-forest: #8FBFA7;
+  --color-forest-dark: #121A16; /* Grounded deep dark shade for dark mode background contexts */
+  --color-forest-light: #A4CFBA;
+  --color-forest-soft: rgba(143, 191, 167, 0.15);
 
-  --color-sand: #C9BBA0;
-  --color-sand-light: #DCD1BD;
-  --color-sand-muted: #9F937C;
-  --color-sand-soft: rgba(201, 187, 160, 0.15);
+  --color-sand: #D9CDBC;
+  --color-sand-light: #ECE3D6;
+  --color-sand-muted: #B3A592;
+  --color-sand-soft: rgba(217, 205, 188, 0.18);
 
-  --color-terracotta: #C4745E;
-  --color-terracotta-hover: #D78670;
-  --color-terracotta-soft: rgba(196, 116, 94, 0.2);
+  --color-terracotta: #D9826C;
+  --color-terracotta-hover: #E79480;
+  --color-terracotta-soft: rgba(217, 130, 108, 0.22);
 
-  --color-text-primary: #F5F1E8;
-  --color-text-secondary: #AAA69C;
-  --color-text-muted: #7E7B74;
-  --color-text-inverse: #141916;
+  --color-text-primary: #F7F4EC;
+  --color-text-secondary: #C5BFB5;
+  --color-text-muted: #9E988E;
+  --color-text-inverse: #121815;
 
-  --color-border: #2A3630;
-  --color-border-subtle: #202A25;
-  --color-border-strong: #384941;
+  --color-border: #2D3A32;
+  --color-border-subtle: #212C25;
+  --color-border-strong: #405347;
 
-  --color-success: #4BA873;
-  --color-success-bg: rgba(75, 168, 115, 0.15);
-  --color-warning: #E0A03C;
-  --color-warning-bg: rgba(224, 160, 60, 0.15);
-  --color-danger: #D95D52;
-  --color-danger-bg: rgba(217, 93, 82, 0.15);
-  --color-info: #5B95B5;
-  --color-info-bg: rgba(91, 149, 181, 0.15);
+  /* Dedicated Semantic Surfaces (Dark Theme) */
+  --color-hero-accent-bg: #16201B;
+  --color-cta-bg: #16201B;
+  --color-cta-text: #F7F4EC;
+  --color-cta-text-muted: #C5BFB5;
+  --color-cta-border: #2D3C33;
 
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.5);
-  --shadow-warm: 0 10px 25px rgba(0, 0, 0, 0.4);
+  --color-footer-bg: #0C120F; /* Deep rich charcoal forest for clear visual hierarchy */
+  --color-footer-text: #F7F4EC;
+  --color-footer-text-secondary: #D9CDBC;
+  --color-footer-text-muted: #A89E90;
+  --color-footer-border: #1F2C24;
+  --color-footer-badge-bg: rgba(217, 205, 188, 0.10);
+  --color-footer-input-bg: rgba(255, 255, 255, 0.05);
+
+  /* Functional Status Colors (Dark Theme - High Luminance AA) */
+  --color-success: #56C289;
+  --color-success-bg: rgba(86, 194, 137, 0.18);
+  --color-warning: #E8A843;
+  --color-warning-bg: rgba(232, 168, 67, 0.18);
+  --color-danger: #E86E64;
+  --color-danger-bg: rgba(232, 110, 100, 0.18);
+  --color-info: #64A8D0;
+  --color-info-bg: rgba(100, 168, 208, 0.18);
+
+  /* Dedicated Semantic Button Tokens (Dark Theme - WCAG AA Contrast Guaranteed) */
+  --btn-primary-bg: #8FBFA7;
+  --btn-primary-text: #121815;
+  --btn-primary-border: #8FBFA7;
+  --btn-primary-hover-bg: #A4CFBA;
+  --btn-primary-hover-text: #0E1411;
+  --btn-primary-hover-border: #A4CFBA;
+
+  --btn-secondary-bg: transparent;
+  --btn-secondary-text: #8FBFA7;
+  --btn-secondary-border: #8FBFA7;
+  --btn-secondary-hover-bg: rgba(143, 191, 167, 0.16);
+  --btn-secondary-hover-text: #A4CFBA;
+  --btn-secondary-hover-border: #A4CFBA;
+
+  --btn-terracotta-bg: #D9826C;
+  --btn-terracotta-text: #121815;
+  --btn-terracotta-border: #D9826C;
+  --btn-terracotta-hover-bg: #E79480;
+  --btn-terracotta-hover-text: #121815;
+  --btn-terracotta-hover-border: #E79480;
+
+  --btn-ghost-bg: transparent;
+  --btn-ghost-text: var(--color-text-primary);
+  --btn-ghost-hover-bg: rgba(143, 191, 167, 0.15);
+  --btn-ghost-hover-text: #A4CFBA;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.6);
+  --shadow-warm: 0 10px 25px rgba(0, 0, 0, 0.5);
 }

@@ -1,12 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="100%" height="100%" fill="none">
-  <!-- Brand Emblem: Botanical Leaf & Paw Silhouette -->
+  <!-- Brand Emblem: Botanical Leaf & Paw Silhouette (Light Variant) -->
   <g transform="translate(10, 10)">
     <!-- Decorative botanical wreath curve -->
-    <path d="M 30,5 C 10,15 5,42 22,54 C 28,58 35,59 40,56 C 36,48 36,30 46,20 C 42,12 37,7 30,5 Z" fill="#283B32" opacity="0.9" />
+    <path d="M 30,5 C 10,15 5,42 22,54 C 28,58 35,59 40,56 C 36,48 36,30 46,20 C 42,12 37,7 30,5 Z" fill="#283B32" opacity="0.95" />
     <path d="M 32,7 C 24,18 25,36 34,46" stroke="#D6C7AD" stroke-width="1.5" stroke-linecap="round" />
     
-    <!-- Stylized central paw pads -->
-    <!-- Main pad -->
+    <!-- Stylized central paw pad in terracotta -->
     <path d="M 28 35 C 24 35 22 39 23 43 C 24 47 28 49 32 49 C 36 49 40 47 41 43 C 42 39 40 35 36 35 C 34 33 30 33 28 35 Z" fill="#A65B46" />
     
     <!-- Toe pads -->
@@ -20,7 +19,7 @@
   </g>
 
   <!-- Typography: PAWELLE -->
-  <text x="76" y="44" font-family="'Fraunces', Georgia, serif" font-size="28" font-weight="600" letter-spacing="2.5" fill="currentColor">
+  <text x="76" y="44" font-family="'Fraunces', Georgia, serif" font-size="28" font-weight="600" letter-spacing="2.5" fill="#283B32">
     PAWELLE
   </text>
 

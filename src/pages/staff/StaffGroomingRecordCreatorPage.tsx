@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { dbStore } from '../../services/store';
 import { useAuth } from '../../features/authentication/AuthContext';
+import { useStoreSync } from '../../hooks/useStoreSync';
 import { Sparkles, CheckCircle2, Scissors } from 'lucide-react';
 
 export const StaffGroomingRecordCreatorPage: React.FC = () => {
   const { user } = useAuth();
+  useStoreSync();
   const pets = dbStore.getPets();
   const appointments = dbStore.getAppointments();
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../features/authentication/AuthContext';
 import { dbStore } from '../../services/store';
+import { useStoreSync } from '../../hooks/useStoreSync';
 import {
   Calendar,
   Heart,
@@ -15,15 +16,20 @@ import {
 
 export const CustomerDashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const customerId = user?.id || 'usr-demo-customer';
+  useStoreSync();
+  const customerId = user?.id || '';
 
-  const pets = dbStore.getPets(customerId);
-  const appointments = dbStore.getAppointments({ customerId });
-  const orders = dbStore.getOrders(customerId);
-  const groomingRecords = dbStore.getGroomingRecords();
+  const pets = customerId ? dbStore.getPets(customerId) : [];
+  const appointments = customerId ? dbStore.getAppointments({ customerId }) : [];
+  const orders = customerId ? dbStore.getOrders(customerId) : [];
+  const ownedPetIds = new Set(pets.map(p => p.id));
+  const groomingRecords = customerId
+    ? dbStore.getGroomingRecords().filter(record => ownedPetIds.has(record.pet_id))
+    : [];
 
   const upcomingAppts = appointments.filter(a => a.status === 'confirmed' || a.status === 'pending');
   const nextAppt = upcomingAppts[0];
+  const displayName = user?.full_name?.trim() || (user?.email ? user.email.split('@')[0] : 'Member');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -46,14 +52,14 @@ export const CustomerDashboardPage: React.FC = () => {
             Customer Sanctuary Portal
           </span>
           <h1 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.4rem)', marginBottom: '6px' }}>
-            Welcome back, {user?.full_name ? user.full_name.split(' ')[0] : 'Jessica'}
+            Welcome back, {displayName}
           </h1>
           <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: '0.95rem' }}>
             Manage your pet companions, view grooming histories, and track upcoming appointments.
           </p>
         </div>
 
-        <Link to="/booking" className="btn btn-primary">
+        <Link to="/customer/booking" className="btn btn-primary">
           <Calendar size={16} /> Book Next Session
         </Link>
       </div>
@@ -154,7 +160,7 @@ export const CustomerDashboardPage: React.FC = () => {
             <p style={{ color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
               You do not have any upcoming visits booked.
             </p>
-            <Link to="/booking" className="btn btn-primary btn-sm">
+            <Link to="/customer/booking" className="btn btn-primary btn-sm">
               Schedule Your Pet's Visit
             </Link>
           </div>
@@ -176,38 +182,49 @@ export const CustomerDashboardPage: React.FC = () => {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          {pets.map(pet => (
-            <div
-              key={pet.id}
-              style={{
-                display: 'flex',
-                gap: '16px',
-                padding: '16px',
-                backgroundColor: 'var(--color-bg-primary)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-border)',
-                alignItems: 'center'
-              }}
-            >
-              <img
-                src={pet.photo_url || 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=200&q=80'}
-                alt={pet.name}
-                style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover' }}
-              />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{pet.name}</h3>
-                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
-                  {pet.breed} &bull; {pet.age_years ? `${pet.age_years} yrs` : 'Adult'}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-terracotta)', fontWeight: 600, marginTop: '4px' }}>
-                  {pet.coat_type || 'Standard Coat'}
-                </div>
-              </div>
-              <Link to="/customer/pets" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-forest)' }}>
-                Edit &rarr;
+          {pets.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '28px', backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-md)' }}>
+              <p style={{ color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
+                No companion profiles registered under this account yet.
+              </p>
+              <Link to="/customer/pets" className="btn btn-primary btn-sm">
+                <Plus size={14} /> Register Your First Companion
               </Link>
             </div>
-          ))}
+          ) : (
+            pets.map(pet => (
+              <div
+                key={pet.id}
+                style={{
+                  display: 'flex',
+                  gap: '16px',
+                  padding: '16px',
+                  backgroundColor: 'var(--color-bg-primary)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-border)',
+                  alignItems: 'center'
+                }}
+              >
+                <img
+                  src={pet.photo_url || 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=200&q=80'}
+                  alt={pet.name}
+                  style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover' }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{pet.name}</h3>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                    {pet.breed} &bull; {pet.age_years ? `${pet.age_years} yrs` : 'Adult'}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-terracotta)', fontWeight: 600, marginTop: '4px' }}>
+                    {pet.coat_type || 'Standard Coat'}
+                  </div>
+                </div>
+                <Link to="/customer/pets" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-forest)' }}>
+                  Edit &rarr;
+                </Link>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

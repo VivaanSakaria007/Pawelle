@@ -35,7 +35,7 @@ export const AdminSettingsPage: React.FC = () => {
 
       <div className="card-surface" style={{ padding: '32px' }}>
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="responsive-two-col">
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label">Brand Name</label>
               <input
@@ -66,7 +66,7 @@ export const AdminSettingsPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="responsive-two-col">
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label">Concierge Email</label>
               <input

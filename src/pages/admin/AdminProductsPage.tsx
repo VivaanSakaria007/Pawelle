@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { dbStore } from '../../services/store';
+import { useStoreSync } from '../../hooks/useStoreSync';
+import { PawelleImage } from '../../components/common/PawelleImage';
 import { Product } from '../../types';
-import { Plus, Edit2, Trash2, CheckCircle2, Package, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const AdminProductsPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(() => dbStore.getProducts());
+  useStoreSync();
+  const products = dbStore.getProducts();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
@@ -30,7 +33,7 @@ export const AdminProductsPage: React.FC = () => {
     setPrice(28);
     setStock(40);
     setDescription('');
-    setImageUrl('https://images.unsplash.com/photo-1608248597359-00965e64805e?auto=format&fit=crop&w=600&q=80');
+    setImageUrl('/assets/products/botanical-shampoo.jpg');
     setModalOpen(true);
   };
 
@@ -77,20 +80,17 @@ export const AdminProductsPage: React.FC = () => {
       showToast(`Added product: ${name}`);
     }
 
-    setProducts(dbStore.getProducts());
     setModalOpen(false);
   };
 
   const handleDelete = (id: string) => {
     dbStore.deleteProduct(id);
-    setProducts(dbStore.getProducts());
     showToast('Product removed from catalog.');
   };
 
   const handleQuickStockUpdate = (p: Product, delta: number) => {
     const newStock = Math.max(0, p.stock_quantity + delta);
     dbStore.updateProduct(p.id, { stock_quantity: newStock });
-    setProducts(dbStore.getProducts());
   };
 
   return (
@@ -116,72 +116,118 @@ export const AdminProductsPage: React.FC = () => {
 
       {/* Table */}
       <div className="card-surface" style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'start', fontSize: '0.9rem' }}>
-          <thead>
-            <tr style={{ backgroundColor: 'var(--color-bg-primary)', borderBottom: '1px solid var(--color-border)' }}>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>Product</th>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>SKU</th>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>Retail Price</th>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>Current Stock</th>
-              <th style={{ padding: '14px 20px', textAlign: 'end' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p, i) => (
-              <tr key={p.id} style={{ borderBottom: i < products.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                <td style={{ padding: '16px 20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img src={p.image_url} alt={p.name} style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-xs)', objectFit: 'cover' }} />
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{p.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{p.category_name}</div>
-                    </div>
-                  </div>
-                </td>
-                <td style={{ padding: '16px 20px', fontFamily: 'monospace' }}>{p.sku}</td>
-                <td style={{ padding: '16px 20px', fontWeight: 600, color: 'var(--color-forest)' }}>
-                  £{p.price}
-                </td>
-                <td style={{ padding: '16px 20px' }}>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    <button
-                      onClick={() => handleQuickStockUpdate(p, -5)}
-                      style={{ padding: '2px 8px', border: '1px solid var(--color-border)', background: 'none', borderRadius: 'var(--radius-xs)', cursor: 'pointer' }}
-                    >
-                      -5
-                    </button>
-                    <span style={{ fontWeight: 600, minWidth: '32px', textAlign: 'center' }}>{p.stock_quantity}</span>
-                    <button
-                      onClick={() => handleQuickStockUpdate(p, 5)}
-                      style={{ padding: '2px 8px', border: '1px solid var(--color-border)', background: 'none', borderRadius: 'var(--radius-xs)', cursor: 'pointer' }}
-                    >
-                      +5
-                    </button>
-                  </div>
-                </td>
-                <td style={{ padding: '16px 20px', textAlign: 'end' }}>
-                  <button onClick={() => handleOpenEdit(p)} className="btn btn-secondary btn-sm" style={{ marginInlineEnd: '8px' }}>
-                    <Edit2 size={13} /> Edit
-                  </button>
-                  <button onClick={() => handleDelete(p.id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }}>
-                    <Trash2 size={13} />
-                  </button>
-                </td>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'start', fontSize: '0.9rem' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--color-bg-primary)', borderBottom: '1px solid var(--color-border)' }}>
+                <th style={{ padding: '14px 20px', textAlign: 'start', whiteSpace: 'nowrap' }}>Product</th>
+                <th style={{ padding: '14px 18px', textAlign: 'start', whiteSpace: 'nowrap' }}>SKU</th>
+                <th style={{ padding: '14px 18px', textAlign: 'start', whiteSpace: 'nowrap' }}>Retail Price</th>
+                <th style={{ padding: '14px 18px', textAlign: 'start', whiteSpace: 'nowrap' }}>Current Stock</th>
+                <th style={{ padding: '14px 20px', textAlign: 'end', whiteSpace: 'nowrap' }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {products.map((p, i) => (
+                <tr key={p.id} style={{ borderBottom: i < products.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+                  <td style={{ padding: '16px 20px', minWidth: '220px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <PawelleImage src={p.image_url} alt={p.name} style={{ width: '44px', height: '44px', borderRadius: 'var(--radius-xs)', objectFit: 'cover', flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{p.name}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{p.category_name}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ padding: '16px 18px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{p.sku}</td>
+                  <td style={{ padding: '16px 18px', fontWeight: 600, color: 'var(--color-forest)', whiteSpace: 'nowrap' }}>
+                    £{p.price}
+                  </td>
+                  <td style={{ padding: '16px 18px', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickStockUpdate(p, -1)}
+                        disabled={p.stock_quantity <= 0}
+                        aria-label={`Decrease stock for ${p.name}`}
+                        title="Decrease stock"
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1px solid var(--color-border-strong)',
+                          backgroundColor: 'var(--color-bg-subtle)',
+                          color: 'var(--color-forest)',
+                          borderRadius: '50%',
+                          cursor: p.stock_quantity <= 0 ? 'not-allowed' : 'pointer',
+                          opacity: p.stock_quantity <= 0 ? 0.45 : 1,
+                          transition: 'background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast)'
+                        }}
+                      >
+                        <ChevronLeft size={15} />
+                      </button>
+                      <span
+                        data-testid={`product-stock-${p.id}`}
+                        style={{ fontWeight: 600, minWidth: '34px', textAlign: 'center', color: 'var(--color-text-primary)' }}
+                      >
+                        {p.stock_quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickStockUpdate(p, 1)}
+                        aria-label={`Increase stock for ${p.name}`}
+                        title="Increase stock"
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1px solid var(--color-border-strong)',
+                          backgroundColor: 'var(--color-bg-subtle)',
+                          color: 'var(--color-forest)',
+                          borderRadius: '50%',
+                          cursor: 'pointer',
+                          transition: 'background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast)'
+                        }}
+                      >
+                        <ChevronRight size={15} />
+                      </button>
+                    </div>
+                  </td>
+                  <td style={{ padding: '16px 20px', textAlign: 'end', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <button onClick={() => handleOpenEdit(p)} className="btn btn-secondary btn-sm">
+                        <Edit2 size={13} /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: 'var(--color-danger)', width: '34px', height: '34px', padding: 0, borderRadius: '50%' }}
+                        aria-label={`Remove ${p.name}`}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
       {modalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(20, 25, 22, 0.75)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="card-surface" style={{ maxWidth: '520px', width: '100%', padding: '32px' }}>
+          <div className="card-surface" style={{ maxWidth: '520px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '28px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '1.35rem', margin: 0 }}>
                 {editingProduct ? `Edit ${editingProduct.name}` : 'Add Apothecary Item'}
               </h2>
-              <button onClick={() => setModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-secondary)' }}>
                 <X size={20} />
               </button>
             </div>
@@ -198,7 +244,7 @@ export const AdminProductsPage: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="responsive-two-col">
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">SKU</label>
                   <input
@@ -221,15 +267,27 @@ export const AdminProductsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Initial Stock Units</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={stock}
-                  onChange={(e) => setStock(Number(e.target.value))}
-                  className="form-input"
-                />
+              <div className="responsive-two-col">
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Initial Stock Units</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={stock}
+                    onChange={(e) => setStock(Number(e.target.value))}
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Photo URL / Path</label>
+                  <input
+                    type="text"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="/assets/products/botanical-shampoo.jpg"
+                    className="form-input"
+                  />
+                </div>
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>

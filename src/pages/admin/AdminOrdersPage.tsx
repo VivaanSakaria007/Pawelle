@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { dbStore } from '../../services/store';
-import { Order, OrderStatus } from '../../types';
+import { useStoreSync } from '../../hooks/useStoreSync';
+import { OrderStatus } from '../../types';
 import { ShoppingBag, CheckCircle2, Truck, Package, Clock } from 'lucide-react';
 
 export const AdminOrdersPage: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>(() => dbStore.getOrders());
+  useStoreSync();
+  const orders = dbStore.getOrders();
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -14,7 +16,6 @@ export const AdminOrdersPage: React.FC = () => {
 
   const handleUpdateStatus = (id: string, newStatus: OrderStatus) => {
     dbStore.updateOrderStatus(id, newStatus);
-    setOrders(dbStore.getOrders());
     showToast(`Order status updated to ${newStatus.toUpperCase()}`);
   };
 

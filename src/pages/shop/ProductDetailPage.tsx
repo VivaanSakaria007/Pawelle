@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { dbStore } from '../../services/store';
 import { useCart } from '../../features/cart/CartContext';
+import { useRequireAuth } from '../../features/authentication/useRequireAuth';
+import { PawelleImage } from '../../components/common/PawelleImage';
 import {
   ShoppingBag,
   Heart,
@@ -18,6 +20,7 @@ export const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const product = dbStore.getProductBySlug(slug || '');
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
+  const { requireAuth } = useRequireAuth();
 
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
@@ -27,9 +30,17 @@ export const ProductDetailPage: React.FC = () => {
   }
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 2000);
+    requireAuth(() => {
+      addToCart(product, quantity);
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 2000);
+    });
+  };
+
+  const handleToggleWishlist = () => {
+    requireAuth(() => {
+      toggleWishlist(product.id);
+    });
   };
 
   return (
@@ -51,43 +62,49 @@ export const ProductDetailPage: React.FC = () => {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 310px), 1fr))',
               gap: 'clamp(32px, 6vw, 64px)',
               alignItems: 'start'
             }}
           >
             {/* Left: Product Imagery */}
             <div>
-              <div style={{ borderRadius: 'var(--radius-xl)', overflow: 'hidden', boxShadow: 'var(--shadow-md)', border: '1px solid var(--color-border)', marginBottom: '24px' }}>
-                <img
+              <div className="editorial-media-frame" style={{ height: '480px', marginBottom: '14px' }}>
+                <PawelleImage
                   src={product.image_url}
                   alt={product.name}
-                  style={{ width: '100%', height: '480px', objectFit: 'cover' }}
+                  fallbackSrc="/assets/products/botanical-shampoo.jpg"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               </div>
 
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <span className="editorial-caption">Mayfair Apothecary Archive</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>100% Non-Toxic Formulation</span>
+              </div>
+
               {/* Guarantees Box */}
-              <div className="card-surface" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
+              <div style={{ padding: '24px', backgroundColor: 'var(--color-bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem' }}>
                   <ShieldCheck size={18} style={{ color: 'var(--color-forest)', flexShrink: 0 }} />
-                  <span>100% Non-Toxic &amp; Cruelty-Free</span>
+                  <span>100% Non-Toxic, Pure &amp; Cruelty-Free</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem' }}>
                   <Droplets size={18} style={{ color: 'var(--color-forest)', flexShrink: 0 }} />
-                  <span>Free of parabens, sulfates &amp; synthetic fragrance</span>
+                  <span>Free of parabens, phthalates &amp; synthetic perfumes</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.875rem' }}>
                   <PackageCheck size={18} style={{ color: 'var(--color-terracotta)', flexShrink: 0 }} />
-                  <span>Complimentary carbon-neutral delivery on orders over £50</span>
+                  <span>Complimentary carbon-neutral delivery on orders over &pound;50</span>
                 </div>
               </div>
             </div>
 
             {/* Right: Purchasing & Details */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span className="badge badge-sand">{product.category_name}</span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>SKU: {product.sku}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span className="editorial-tag">{product.category_name}</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>SKU: {product.sku}</span>
               </div>
 
               <h1 style={{ fontSize: 'clamp(2rem, 4vw, 2.8rem)', marginBottom: '16px' }}>
@@ -96,7 +113,7 @@ export const ProductDetailPage: React.FC = () => {
 
               {/* Price & Stock */}
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '20px' }}>
-                <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-heading)', fontWeight: 600, color: 'var(--color-forest)' }}>
+                <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
                   £{product.sale_price || product.price}
                 </div>
                 {product.sale_price && (
@@ -115,34 +132,39 @@ export const ProductDetailPage: React.FC = () => {
 
               {/* Quantity Picker & Add to Cart */}
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--color-bg-surface)', padding: '4px' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--color-bg-surface)', padding: '4px', minHeight: '48px' }}>
                   <button
+                    type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     aria-label="Decrease quantity"
-                    style={{ background: 'none', border: 'none', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                    style={{ background: 'none', border: 'none', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '50%', color: 'var(--color-text-primary)' }}
                   >
                     <Minus size={14} />
                   </button>
                   <span style={{ paddingInline: '16px', fontWeight: 600, fontSize: '1rem' }}>{quantity}</span>
                   <button
+                    type="button"
                     onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
                     aria-label="Increase quantity"
-                    style={{ background: 'none', border: 'none', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                    style={{ background: 'none', border: 'none', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', borderRadius: '50%', color: 'var(--color-text-primary)' }}
                   >
                     <Plus size={14} />
                   </button>
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleAddToCart}
                   disabled={product.stock_quantity <= 0}
                   className={`btn ${justAdded ? 'btn-secondary' : 'btn-primary'} btn-lg`}
-                  style={{ flex: 1, minWidth: '220px' }}
+                  style={{ flex: 1, minWidth: '220px', minHeight: '48px' }}
                 >
                   {justAdded ? (
                     <>
                       <Check size={18} /> Added to Cart!
                     </>
+                  ) : product.stock_quantity <= 0 ? (
+                    'Out of Stock'
                   ) : (
                     <>
                       <ShoppingBag size={18} /> Add to Cart — £{((product.sale_price || product.price) * quantity).toFixed(2)}
@@ -151,10 +173,11 @@ export const ProductDetailPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => toggleWishlist(product.id)}
+                  type="button"
+                  onClick={handleToggleWishlist}
                   aria-label="Wishlist toggle"
                   className="btn btn-secondary"
-                  style={{ padding: '14px', borderRadius: '50%' }}
+                  style={{ width: '48px', height: '48px', padding: 0, borderRadius: '50%' }}
                 >
                   <Heart
                     size={20}

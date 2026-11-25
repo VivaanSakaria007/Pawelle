@@ -1,12 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { pawelleSyncPlugin } from './server/pawelleSyncPlugin';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), pawelleSyncPlugin()],
   server: {
     port: 5173,
     host: true
+  },
+  preview: {
+    host: true,
+    allowedHosts: true
   },
   build: {
     chunkSizeWarningLimit: 800,

@@ -246,6 +246,9 @@ export interface ContactMessage {
   subject: string;
   message: string;
   status: 'new' | 'read' | 'replied' | 'archived';
+  reply_text?: string;
+  replied_at?: string;
+  replied_by?: string;
   created_at: string;
 }
 

@@ -1,28 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../features/authentication/AuthContext';
 import { dbStore } from '../../services/store';
+import { useStoreSync } from '../../hooks/useStoreSync';
 import { Appointment } from '../../types';
 import {
   Calendar,
   Clock,
   MapPin,
-  AlertCircle,
   CheckCircle2,
-  XCircle,
-  Scissors,
-  ArrowRight,
   X
 } from 'lucide-react';
 
 export const CustomerAppointmentsPage: React.FC = () => {
   const { user } = useAuth();
-  const customerId = user?.id || 'usr-demo-customer';
+  useStoreSync();
+  const customerId = user?.id || '';
 
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming');
-  const [appointments, setAppointments] = useState<Appointment[]>(() =>
-    dbStore.getAppointments({ customerId })
-  );
+  const appointments = customerId ? dbStore.getAppointments({ customerId }) : [];
 
   // Reschedule Modal State
   const [reschedulingAppt, setReschedulingAppt] = useState<Appointment | null>(null);
@@ -30,6 +26,12 @@ export const CustomerAppointmentsPage: React.FC = () => {
   const [newTime, setNewTime] = useState('12:00');
   const [rescheduleError, setRescheduleError] = useState('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // Reset tab state whenever active user switches
+  useEffect(() => {
+    setActiveTab('upcoming');
+    setReschedulingAppt(null);
+  }, [customerId]);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -39,7 +41,6 @@ export const CustomerAppointmentsPage: React.FC = () => {
   const handleCancel = (apptId: string) => {
     try {
       dbStore.updateAppointmentStatus(apptId, 'cancelled');
-      setAppointments(dbStore.getAppointments({ customerId }));
       showToast('Appointment successfully cancelled.');
     } catch (err: any) {
       showToast(err.message || 'Failed to cancel appointment.');
@@ -59,7 +60,6 @@ export const CustomerAppointmentsPage: React.FC = () => {
       const newEndsAt = new Date(new Date(newStartsAt).getTime() + durationMs).toISOString();
 
       dbStore.rescheduleAppointment(reschedulingAppt.id, newStartsAt, newEndsAt);
-      setAppointments(dbStore.getAppointments({ customerId }));
       setReschedulingAppt(null);
       showToast('Appointment successfully rescheduled.');
     } catch (err: any) {
@@ -83,7 +83,7 @@ export const CustomerAppointmentsPage: React.FC = () => {
           </p>
         </div>
 
-        <Link to="/booking" className="btn btn-primary">
+        <Link to="/customer/booking" className="btn btn-primary">
           <Calendar size={16} /> Book New Appointment
         </Link>
       </div>
@@ -95,21 +95,27 @@ export const CustomerAppointmentsPage: React.FC = () => {
       )}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '10px', borderBottom: '1px solid var(--color-border)', paddingBottom: '12px' }}>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', borderBottom: '1px solid var(--color-border)', paddingBottom: '14px' }}>
         <button
+          type="button"
           onClick={() => setActiveTab('upcoming')}
+          aria-pressed={activeTab === 'upcoming'}
           className={`btn btn-sm ${activeTab === 'upcoming' ? 'btn-primary' : 'btn-ghost'}`}
         >
           Upcoming Visits ({appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length})
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('completed')}
+          aria-pressed={activeTab === 'completed'}
           className={`btn btn-sm ${activeTab === 'completed' ? 'btn-primary' : 'btn-ghost'}`}
         >
           Past Completed ({appointments.filter(a => a.status === 'completed').length})
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('cancelled')}
+          aria-pressed={activeTab === 'cancelled'}
           className={`btn btn-sm ${activeTab === 'cancelled' ? 'btn-primary' : 'btn-ghost'}`}
         >
           Cancelled ({appointments.filter(a => a.status === 'cancelled' || a.status === 'no_show').length})
@@ -124,7 +130,7 @@ export const CustomerAppointmentsPage: React.FC = () => {
           <p style={{ color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
             Ready to schedule an unhurried visit for your companion?
           </p>
-          <Link to="/booking" className="btn btn-primary btn-sm">
+          <Link to="/customer/booking" className="btn btn-primary btn-sm">
             Book a Ritual
           </Link>
         </div>

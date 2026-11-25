@@ -1,16 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Phone, Mail } from 'lucide-react';
+import { PawelleLogo } from '../../components/common/PawelleLogo';
 
 export const MaintenancePage: React.FC = () => {
   return (
     <div className="section" style={{ backgroundColor: 'var(--color-bg-primary)', minHeight: '80vh', display: 'flex', alignItems: 'center' }}>
       <div className="container-narrow" style={{ textAlign: 'center' }}>
-        <img
-          src="/assets/logos/pawelle-logo.svg"
-          alt="PAWELLE"
-          style={{ height: '48px', width: 'auto', marginInline: 'auto', marginBottom: '28px' }}
-        />
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
+          <PawelleLogo height="48px" />
+        </div>
         <span className="badge badge-sand" style={{ marginBottom: '16px' }}>
           Scheduled Sanctuary Enhancement
         </span>

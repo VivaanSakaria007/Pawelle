@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { dbStore } from '../../services/store';
-import { Search, Heart, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { useStoreSync } from '../../hooks/useStoreSync';
+import { PetAvatar } from '../../components/common/PetAvatar';
+import { Search, AlertTriangle } from 'lucide-react';
 
 export const AdminPetsPage: React.FC = () => {
   const [search, setSearch] = useState('');
+  useStoreSync();
   const pets = dbStore.getPets();
 
   const filtered = pets.filter(p =>
@@ -36,15 +39,11 @@ export const AdminPetsPage: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '24px' }}>
         {filtered.map(pet => (
           <div key={pet.id} className="card-surface" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-              <img
-                src={pet.photo_url || 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=200&q=80'}
-                alt={pet.name}
-                style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }}
-              />
+              <PetAvatar photoUrl={pet.photo_url} name={pet.name} size={60} />
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <h2 style={{ fontSize: '1.25rem', margin: 0 }}>{pet.name}</h2>

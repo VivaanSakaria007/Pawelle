@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { dbStore } from '../../services/store';
+import { useStoreSync } from '../../hooks/useStoreSync';
 import { Service } from '../../types';
 import { Plus, Edit2, Trash2, CheckCircle2, X } from 'lucide-react';
 
+const SERVICE_CATEGORIES = [
+  { id: 'cat-1', name: 'Signature Styling' },
+  { id: 'cat-2', name: 'Hydrotherapy & Spa Baths' },
+  { id: 'cat-3', name: 'Essential Wellness Care' },
+  { id: 'cat-4', name: 'Puppy & Senior Gentle Care' }
+];
+
 export const AdminServicesPage: React.FC = () => {
-  const [services, setServices] = useState<Service[]>(() => dbStore.getServices(false));
+  useStoreSync();
+  const services = dbStore.getServices(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
 
@@ -56,11 +66,13 @@ export const AdminServicesPage: React.FC = () => {
 
     const generatedSlug = slug.trim() || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const inclusionsArray = inclusions.split(',').map(s => s.trim()).filter(Boolean);
+    const matchedCat = SERVICE_CATEGORIES.find(c => c.name === categoryName);
 
     if (editingService) {
       dbStore.updateService(editingService.id, {
         name: name.trim(),
         slug: generatedSlug,
+        category_id: matchedCat?.id || editingService.category_id,
         category_name: categoryName,
         duration_minutes: Number(duration),
         base_price: Number(price),
@@ -73,7 +85,7 @@ export const AdminServicesPage: React.FC = () => {
       dbStore.createService({
         name: name.trim(),
         slug: generatedSlug,
-        category_id: 'cat-1',
+        category_id: matchedCat?.id || 'cat-1',
         category_name: categoryName,
         duration_minutes: Number(duration),
         base_price: Number(price),
@@ -86,15 +98,17 @@ export const AdminServicesPage: React.FC = () => {
       showToast(`Created new service: ${name}`);
     }
 
-    setServices(dbStore.getServices(false));
     setModalOpen(false);
   };
 
   const handleDelete = (id: string) => {
     dbStore.deleteService(id);
-    setServices(dbStore.getServices(false));
     showToast('Service archived.');
   };
+
+  const visibleServices = services.filter(s =>
+    selectedCategory === 'all' || s.category_name === selectedCategory
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -111,6 +125,40 @@ export const AdminServicesPage: React.FC = () => {
         </button>
       </div>
 
+      {/* Category Filter Bar */}
+      <div
+        className="card-surface"
+        style={{
+          padding: '14px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          flexWrap: 'wrap'
+        }}
+        role="group"
+        aria-label="Filter services by category"
+      >
+        <button
+          type="button"
+          onClick={() => setSelectedCategory('all')}
+          className={`filter-chip ${selectedCategory === 'all' ? 'active' : ''}`}
+          style={{ padding: '7px 16px', fontSize: '0.825rem' }}
+        >
+          All Categories ({services.length})
+        </button>
+        {SERVICE_CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            type="button"
+            onClick={() => setSelectedCategory(cat.name)}
+            className={`filter-chip ${selectedCategory === cat.name ? 'active' : ''}`}
+            style={{ padding: '7px 16px', fontSize: '0.825rem' }}
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
+
       {toastMsg && (
         <div style={{ padding: '12px 20px', backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
           <CheckCircle2 size={18} /> {toastMsg}
@@ -118,46 +166,82 @@ export const AdminServicesPage: React.FC = () => {
       )}
 
       <div className="card-surface" style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'start', fontSize: '0.9rem' }}>
-          <thead>
-            <tr style={{ backgroundColor: 'var(--color-bg-primary)', borderBottom: '1px solid var(--color-border)' }}>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>Service Name</th>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>Category</th>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>Duration</th>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>Base Price</th>
-              <th style={{ padding: '14px 20px', textAlign: 'start' }}>Status</th>
-              <th style={{ padding: '14px 20px', textAlign: 'end' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {services.map((s, i) => (
-              <tr key={s.id} style={{ borderBottom: i < services.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                <td style={{ padding: '16px 20px' }}>
-                  <div style={{ fontWeight: 600 }}>{s.name}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>/{s.slug}</div>
-                </td>
-                <td style={{ padding: '16px 20px' }}>
-                  <span className="badge badge-sand">{s.category_name}</span>
-                </td>
-                <td style={{ padding: '16px 20px' }}>{s.duration_minutes} min</td>
-                <td style={{ padding: '16px 20px', fontWeight: 600, color: 'var(--color-forest)' }}>
-                  £{s.base_price}
-                </td>
-                <td style={{ padding: '16px 20px' }}>
-                  <span className="badge badge-success">ACTIVE</span>
-                </td>
-                <td style={{ padding: '16px 20px', textAlign: 'end' }}>
-                  <button onClick={() => handleOpenEdit(s)} className="btn btn-secondary btn-sm" style={{ marginInlineEnd: '8px' }}>
-                    <Edit2 size={13} /> Edit
-                  </button>
-                  <button onClick={() => handleDelete(s.id)} className="btn btn-ghost btn-sm" style={{ color: 'var(--color-danger)' }}>
-                    <Trash2 size={13} />
-                  </button>
-                </td>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'start', fontSize: '0.885rem' }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--color-bg-primary)', borderBottom: '1px solid var(--color-border)' }}>
+                <th style={{ padding: '14px 18px', textAlign: 'start', whiteSpace: 'nowrap' }}>Service Name</th>
+                <th style={{ padding: '14px 14px', textAlign: 'start', whiteSpace: 'nowrap' }}>Category</th>
+                <th style={{ padding: '14px 12px', textAlign: 'start', whiteSpace: 'nowrap' }}>Duration</th>
+                <th style={{ padding: '14px 12px', textAlign: 'start', whiteSpace: 'nowrap' }}>Base Price</th>
+                <th style={{ padding: '14px 12px', textAlign: 'start', whiteSpace: 'nowrap' }}>Status</th>
+                <th style={{ padding: '14px 18px', textAlign: 'end', whiteSpace: 'nowrap' }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visibleServices.map((s, i) => (
+                <tr key={s.id} style={{ borderBottom: i < visibleServices.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+                  <td style={{ padding: '16px 18px', verticalAlign: 'middle', minWidth: '180px' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '2px' }}>{s.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>/{s.slug}</div>
+                  </td>
+                  <td style={{ padding: '16px 14px', verticalAlign: 'middle' }}>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '6px 14px',
+                        borderRadius: 'var(--radius-pill)',
+                        backgroundColor: 'var(--color-sand-soft)',
+                        border: '1px solid var(--color-border)',
+                        color: 'var(--color-text-primary)',
+                        fontSize: '0.73rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                        lineHeight: 1.3
+                      }}
+                    >
+                      {s.category_name}
+                    </span>
+                  </td>
+                  <td style={{ padding: '16px 12px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    {s.duration_minutes} min
+                  </td>
+                  <td style={{ padding: '16px 12px', verticalAlign: 'middle', fontWeight: 600, color: 'var(--color-forest)', whiteSpace: 'nowrap' }}>
+                    £{s.base_price}
+                  </td>
+                  <td style={{ padding: '16px 12px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    <span className="badge badge-success" style={{ padding: '5px 11px' }}>ACTIVE</span>
+                  </td>
+                  <td style={{ padding: '16px 18px', verticalAlign: 'middle', textAlign: 'end' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', whiteSpace: 'nowrap' }}>
+                      <button onClick={() => handleOpenEdit(s)} className="btn btn-secondary btn-sm" style={{ padding: '7px 13px' }}>
+                        <Edit2 size={13} style={{ flexShrink: 0 }} /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(s.id)}
+                        className="btn btn-ghost btn-sm"
+                        style={{
+                          color: 'var(--color-danger)',
+                          width: '34px',
+                          height: '34px',
+                          padding: 0,
+                          borderRadius: '50%',
+                          flexShrink: 0
+                        }}
+                        aria-label={`Archive ${s.name}`}
+                      >
+                        <Trash2 size={15} style={{ flexShrink: 0 }} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal */}
@@ -186,7 +270,20 @@ export const AdminServicesPage: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Category *</label>
+                <select
+                  value={categoryName}
+                  onChange={(e) => setCategoryName(e.target.value)}
+                  className="form-select"
+                >
+                  {SERVICE_CATEGORIES.map(cat => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="responsive-two-col">
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Duration (Minutes)</label>
                   <input

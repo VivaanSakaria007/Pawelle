@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../../features/authentication/AuthContext';
+import { Lock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { PawelleLogo } from '../../components/common/PawelleLogo';
 
 export const ResetPasswordPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
+  const { completePasswordReset, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  const handleReset = (e: React.FormEvent) => {
+  const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -23,7 +26,12 @@ export const ResetPasswordPage: React.FC = () => {
       return;
     }
 
-    setSuccess(true);
+    try {
+      await completePasswordReset(newPassword);
+      setSuccess(true);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to update password.');
+    }
   };
 
   return (
@@ -32,7 +40,7 @@ export const ResetPasswordPage: React.FC = () => {
         <div className="card-surface" style={{ padding: 'clamp(28px, 5vw, 44px)' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <Link to="/" style={{ display: 'inline-block', marginBottom: '16px' }}>
-              <img src="/assets/logos/pawelle-logo.svg" alt="PAWELLE" style={{ height: '40px', width: 'auto' }} />
+              <PawelleLogo height="40px" />
             </Link>
             <h1 style={{ fontSize: '1.8rem', marginBottom: '8px' }}>Create New Password</h1>
             <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', margin: 0 }}>
@@ -41,8 +49,22 @@ export const ResetPasswordPage: React.FC = () => {
           </div>
 
           {errorMsg && (
-            <div style={{ padding: '12px', backgroundColor: 'var(--color-danger-bg)', color: 'var(--color-danger)', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              {errorMsg}
+            <div
+              role="alert"
+              style={{
+                padding: '12px',
+                backgroundColor: 'var(--color-danger-bg)',
+                color: 'var(--color-danger)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.85rem',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <AlertCircle size={16} />
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -60,12 +82,14 @@ export const ResetPasswordPage: React.FC = () => {
           ) : (
             <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">New Password</label>
+                <label htmlFor="reset-new-password" className="form-label">New Password</label>
                 <div style={{ position: 'relative' }}>
                   <input
+                    id="reset-new-password"
                     type="password"
                     required
                     minLength={8}
+                    autoComplete="new-password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Minimum 8 characters"
@@ -77,15 +101,17 @@ export const ResetPasswordPage: React.FC = () => {
               </div>
 
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Confirm New Password</label>
+                <label htmlFor="reset-confirm-password" className="form-label">Confirm New Password</label>
                 <div style={{ position: 'relative' }}>
                   <input
+                    id="reset-confirm-password"
                     type="password"
                     required
                     minLength={8}
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter password"
+                    placeholder="Repeat new password"
                     className="form-input"
                     style={{ paddingInlineStart: '38px' }}
                   />
@@ -93,8 +119,13 @@ export const ResetPasswordPage: React.FC = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }}>
-                Update Password
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn btn-primary btn-lg"
+                style={{ width: '100%', justifyContent: 'center', marginTop: '8px' }}
+              >
+                {isLoading ? 'Updating Password...' : 'Save New Password'}
               </button>
             </form>
           )}
@@ -103,3 +134,5 @@ export const ResetPasswordPage: React.FC = () => {
     </div>
   );
 };
+
+export default ResetPasswordPage;

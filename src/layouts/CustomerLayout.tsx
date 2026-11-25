@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/authentication/AuthContext';
-import { RoleSwitcherBanner } from '../components/navigation/RoleSwitcherBanner';
 import { Header } from '../components/navigation/Header';
 import {
   LayoutDashboard,
@@ -22,15 +21,21 @@ export const CustomerLayout: React.FC = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Close mobile sidebar and reset layout state on user identity switch
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [user?.id]);
+
   const handleLogout = async () => {
+    setSidebarOpen(false);
     await logout();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   const navLinks = [
     { to: '/customer', label: 'Dashboard Overview', icon: LayoutDashboard, end: true },
     { to: '/customer/pets', label: 'My Pet Profiles', icon: Heart },
-    { to: '/booking', label: 'Book Grooming Session', icon: Calendar },
+    { to: '/customer/booking', label: 'Book Grooming Session', icon: Calendar },
     { to: '/customer/appointments', label: 'My Appointments', icon: Scissors },
     { to: '/customer/grooming-records', label: 'Grooming Records', icon: Sparkles },
     { to: '/customer/orders', label: 'Order History', icon: ShoppingBag },
@@ -40,7 +45,6 @@ export const CustomerLayout: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg-primary)' }}>
-      <RoleSwitcherBanner />
       <Header />
 
       <div className="container" style={{ flex: 1, paddingBlock: '32px' }}>
@@ -148,9 +152,9 @@ export const CustomerLayout: React.FC = () => {
             </nav>
           </aside>
 
-          {/* Main Content Area */}
+          {/* Main Content Area — keyed by user identity so no previous user's state ever persists */}
           <main style={{ minWidth: 0 }}>
-            <Outlet />
+            <Outlet key={user?.id || 'guest'} />
           </main>
         </div>
       </div>

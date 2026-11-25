@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <!-- Rounded subtle warm background (Dark Variant) -->
+  <rect width="64" height="64" rx="16" fill="#1A221E" stroke="#2D3A32" stroke-width="1.5" />
+  
+  <g transform="translate(4, 2)">
+    <!-- Decorative botanical wreath curve -->
+    <path d="M 28,6 C 12,14 8,38 22,48 C 27,51 33,52 37,49 C 34,42 34,26 42,18 C 39,11 34,7 28,6 Z" fill="#8FBFA7" opacity="0.95" />
+    <path d="M 30,8 C 23,17 24,32 32,41" stroke="#D9CDBC" stroke-width="1.2" stroke-linecap="round" />
+    
+    <!-- Stylized central paw pad in warm terracotta -->
+    <path d="M 27 31 C 23 31 21 35 22 39 C 23 43 27 45 31 45 C 35 45 39 43 40 39 C 41 35 39 31 35 31 C 33 29 29 29 27 31 Z" fill="#D9826C" />
+    
+    <!-- Toe pads -->
+    <ellipse cx="22" cy="24" rx="2.8" ry="4.0" transform="rotate(-20 22 24)" fill="#8FBFA7" />
+    <ellipse cx="28" cy="20" rx="3.0" ry="4.2" fill="#8FBFA7" />
+    <ellipse cx="35" cy="21" rx="3.0" ry="4.2" transform="rotate(15 35 21)" fill="#8FBFA7" />
+    <ellipse cx="40" cy="25" rx="2.6" ry="3.8" transform="rotate(30 40 25)" fill="#8FBFA7" />
+    
+    <path d="M 46,12 Q 46,15 49,15 Q 46,15 46,18 Q 46,15 43,15 Q 46,15 46,12 Z" fill="#D9CDBC" />
+  </g>
+</svg>

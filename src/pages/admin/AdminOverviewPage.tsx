@@ -1,5 +1,6 @@
 import React from 'react';
 import { dbStore } from '../../services/store';
+import { useStoreSync } from '../../hooks/useStoreSync';
 import {
   Calendar,
   Users,
@@ -14,6 +15,7 @@ import {
 import { Link } from 'react-router-dom';
 
 export const AdminOverviewPage: React.FC = () => {
+  useStoreSync();
   const appointments = dbStore.getAppointments();
   const orders = dbStore.getOrders();
   const products = dbStore.getProducts();
@@ -134,7 +136,7 @@ export const AdminOverviewPage: React.FC = () => {
       </div>
 
       {/* Recent Activity Streams */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '28px' }}>
         {/* Recent Appointments */}
         <div className="card-surface" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>

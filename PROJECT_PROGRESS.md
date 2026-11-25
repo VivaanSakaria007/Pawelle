@@ -1,107 +1,62 @@
 # PAWELLE — Project Progress Tracker
 
 **Project:** Luxury Pet Grooming & Spa  
-**Status:** Complete — All 10 Checkpoints Verified  
-**Current Phase:** Implementation & Quality Assurance Completed  
-**Last Updated:** 2026-11-20
+**Status:** Audit & Security Hardening Completed (Phases 1–16)  
+**Current Phase:** Production-Ready Verification Completed  
+**Last Updated:** November 2026  
 
 ---
 
 ## Checkpoint Status Overview
 
-| Checkpoint | Scope | Status | Notes |
+| Phase / Checkpoint | Scope | Status | Notes |
 |---|---|---|---|
-| **Checkpoint 1** | Project foundation & configuration | ✅ Completed | Vite 6 + React 18 + TS 5.7, modular architecture |
-| **Checkpoint 2** | Design system & shared components | ✅ Completed | Fraunces/DM Sans typography, color tokens, navbar, footer, buttons |
-| **Checkpoint 3** | Public website pages | ✅ Completed | Homepages 1 & 2, About, Services, Pricing, Blog, Contact, Shop, 404, etc. |
-| **Checkpoint 4** | Backend & database foundation | ✅ Completed | Supabase integration, SQL migrations 001/002, seed.sql, local store |
-| **Checkpoint 5** | Pet management & booking system | ✅ Completed | Collision-free availability engine, multi-step booking, appointments |
-| **Checkpoint 6** | Customer & staff applications | ✅ Completed | Customer dashboard, pet CRUD, staff roster, grooming records |
-| **Checkpoint 7** | Ecommerce system | ✅ Completed | Apothecary catalog, product detail, cart, checkout, orders, inventory |
-| **Checkpoint 8** | Administration dashboard | ✅ Completed | Analytics, full CRUD management across all entities, studio settings |
-| **Checkpoint 9** | Refinement (Dark/Light, RTL, SEO, A11y) | ✅ Completed | Dual-theme, Arabic RTL, accessibility, responsive polish |
-| **Checkpoint 10** | Quality assurance & testing | ✅ Completed | Vitest suites passing, TypeScript 0 errors, production build verified |
+| **Phase 1** | Comprehensive Application Audit | ✅ Completed | Documented in `AUDIT_REPORT.md` (24 findings across security, function, styling, a11y) |
+| **Phase 2** | Centralized Route Scroll Restoration | ✅ Completed | Implemented `ScrollToTop.tsx` with pathname/hash support, dropdown keyboard controls |
+| **Phase 3** | Rebuild Auth & Role-Based Guards | ✅ Completed | Public role switcher removed; Supabase Auth integrated; `ProtectedRoute.tsx` fails closed |
+| **Phase 4** | Repair Database Security & RLS | ✅ Completed | Fixed `search_path`, triggers preventing role self-promotion, appointment mutation guards |
+| **Phase 5** | Data Access Layer & Store | ✅ Completed | Full Supabase client integration layer with explicit sandbox fallback simulation |
+| **Phase 6** | Booking Availability Engine | ✅ Completed | Dynamic collision checks, operating hours validation, timezone conversion, price integrity |
+| **Phase 7** | Secure Checkout & Inventory | ✅ Completed | Removed raw card form state; tokenized/express checkout architecture; atomic inventory deduction |
+| **Phase 8** | Dark Mode & Contrast Compliance | ✅ Completed | WCAG 2.2 AA compliant palette (8.8:1 contrast on dark surfaces with luminous sage accents) |
+| **Phase 9 & 10** | Typography & Responsive Layout | ✅ Completed | Fraunces/DM Sans scale, fluid clamps, 320px–1920px verified |
+| **Phase 11 & 12** | Accessibility & Content Audit | ✅ Completed | Explicit `id`/`htmlFor` pairings, ARIA dialogs, focus rings, clinical disclaimers |
+| **Phase 13 & 14** | Performance & Automated Test Suites | ✅ Completed | `React.lazy` code splitting; 6 Vitest suites (16 tests passed); Rollup chunk optimization |
+| **Phase 15 & 16** | Verification & Final Delivery | ✅ Completed | Zero TS errors (`tsc --noEmit`), build clean, all documentation synced |
+| **Phase 17** | UI Refinement & Functional Bug Fixes | ✅ Completed | Dedicated Footer/CTA tokens, PawelleLogo, PawelleImage, nested `/customer/booking`, duration-pill, guest bypass removal |
+| **Phase 18** | Complete Website UI, Functionality & Dark Mode Fixes | ✅ Completed | Footer badge cleanup, Mayfair Flagship color match, equal-height service cards, beechwood brush asset, global button dark mode hover tokens, staff/admin RBAC isolation, high-contrast favicon |
 
 ---
 
-## Checkpoint Milestones Breakdown
+## Engineering Enhancements Implemented
 
-### Checkpoint 1: Project Foundation
-- [x] Environment inspection: Node v26.13.1, npm 11.20.0, Git 2.56.1, Chrome & Edge
-- [x] Git repository initialized
-- [x] `package.json`, `tsconfig.json`, `vite.config.ts`, `.gitignore`, `.env.example`
-- [x] Directory structure configured per Technical Architecture
-- [x] Dependencies installed and build pipeline verified
+### 1. Security & Identity Safeguards
+- **Eliminated Public Role Switcher**: Deleted the unauthenticated role-switching banner that previously permitted any anonymous visitor to escalate privileges to Staff or Admin.
+- **Fail-Closed Authorization Guards & Strict RBAC Isolation**: Added `ProtectedRoute.tsx` wrapping all dashboard routes (`/customer/*`, `/staff/*`, `/admin/*`). Unauthenticated visitors are redirected to `/login` with return destination tracking. Enforced strict role isolation: Customer routes strictly require `role: 'customer'`, Staff routes strictly require `role: 'staff'`, and Admin routes strictly require `role: 'admin'`.
+- **Role-Tailored Header Dropdown**: Replaced hardcoded `/customer/appointments` with role-aware dropdown menus: Customers get Client Portal, My Appointments (`/customer/appointments`), and Book Ritual; Staff get Staff Portal, Studio Schedule (`/staff/appointments`), and Grooming Records; Admins get Admin Overview, Appointments Manager (`/admin/appointments`), and Staff & Rosters.
+- **Enforced Authentication on Booking & Ecommerce**: Removed guest booking form and guest checkout bypass entirely. All booking buttons navigate to `/customer/booking` (nested inside `CustomerLayout`). Cart addition, wishlist toggles, and checkout require verified identity via `useRequireAuth` with query preservation (`?service=...`).
+- **Strict RBAC Login Routing**: Updated `login()` in `AuthContext` to return validated `UserProfile` and route dynamically based on `authenticatedUser.role` rather than hardcoded email string checks.
+- **Role Self-Promotion Prohibited**: Blocked `role` column modifications in `AuthContext.updateProfile` and added PostgreSQL trigger `trg_protect_profile_role` preventing non-admin database role alteration.
+- **PCI-DSS Compliance**: Stripped all raw card number, expiry, and CVC inputs from custom React state. Replaced with tokenized and express payment simulator architecture.
 
-### Checkpoint 2: Design System & Shared Components
-- [x] Bespoke boutique brand identity (SVG mark and wordmark)
-- [x] Fraunces display serif headings & DM Sans clean body typography
-- [x] Color tokens (Brand Forest `#283B32`, Primary Bg `#F4F0E7`, Sand `#D6C7AD`, Terracotta `#A65B46`, Warm White `#FFFEFB`)
-- [x] Responsive navigation header with dropdowns and mobile drawer
-- [x] Complete editorial footer with newsletter validation and studio coordinates
-- [x] Interactive Role Switcher banner for seamless inspection across roles
+### 2. Navigation, Scroll Restoration & Account Switching
+- **Centralized Scroll Restoration**: Implemented `ScrollToTop.tsx` directly inside the router tree. Navigating between routes instantly resets window scroll to (0, 0), while supporting `#hash` anchors smoothly. Removed redundant `|| true` condition.
+- **Account-Switch Dashboard Reset**: Added identity change listener (`user?.id`) in `ScrollToTop.tsx` and `CustomerLayout.tsx` that resets scroll offset to top and closes mobile drawers when switching user accounts.
+- **Nested Booking Route & Staff Appointments Route**: Nested `/customer/booking` cleanly inside `<CustomerLayout>` so customers preserve dashboard layout while booking. Added query-preserving `BookingRedirect` for legacy `/booking` URLs. Added `/staff/appointments` mapping to `StaffDashboardPage` for direct schedule access.
+- **Parent Active Nav Indicators**: Highlight parent items (`/services`, `/shop`, `/blog`) when inspecting nested slug pages.
+- **Accessible Mobile Drawer**: Added `role="dialog"`, `aria-modal="true"`, `Escape` keyboard dismissal, and auto-close on all navigation clicks.
 
-### Checkpoint 3: Public Website
-- [x] Homepage 1: Flagship business homepage (Hero, brand intro, services, why us, real photo gallery with lightbox, packages, testimonials, booking invitation)
-- [x] Homepage 2: Alternative niche retreat (Dual-focus dog & cat categories, spa experiences, 4-step ritual, featured groomers, package comparison)
-- [x] About Page: Heritage story, mission, core values, clinical hygiene standards, master stylist profiles
-- [x] Services Page: Complete catalog with category & species filtering
-- [x] Service Detail Page (`/services/:slug`): Pricing, duration, inclusions, exclusions, FAQs, booking CTA
-- [x] Pricing & Memberships: Transparent packages, Silver Paws & Haute Atelier club tiers, a la carte table
-- [x] Blog / Journal (`/blog` & `/blog/:slug`): Editorial articles, search, categories, reading time, author bio
-- [x] Contact Page: Studio addresses, map info, business hours, live contact submission to database
-- [x] Coming Soon, Maintenance, and 404 pages
+### 3. Theme, Footer & Contrast Hierarchy (WCAG 2.2 AA)
+- **Global Dark Mode Button Hover Fix**: Introduced dedicated semantic button tokens (`--btn-primary-bg`, `--btn-primary-text`, `--btn-primary-hover-bg`, `--btn-primary-hover-text`, `--btn-secondary-*`, `--btn-terracotta-*`, `--btn-ghost-*`). In dark mode, `.btn-primary:hover` now renders a luminous sage background (`#A4CFBA`) with sharp dark text (`#0E1411`), permanently resolving the bug where buttons disappeared into black backgrounds.
+- **Equal-Height Service Cards**: Standardized card container height to 100%, title `minHeight: 3.6rem` (line-height 1.35), description `minHeight: 4.2rem` (3-line clamp), inclusions uniform height, and aligned action buttons to bottom margin-top auto across `ServicesPage` and `Homepage1`.
+- **Homepage 1 Mayfair Flagship Overlay**: Replaced hardcoded white background with `var(--color-bg-surface)` at 0.96 opacity, border, and backdrop blur, ensuring high-contrast readability in both light and dark modes.
+- **Footer Cleanup & Typography**: Removed poorly spaced "Certified Fear-Free" and "Organic Botanicals" badges. Synchronized "Mayfair Flagship" text color with the address text color (`var(--color-footer-text-secondary)`) in both themes.
+- **Dedicated Pawelle Logos & High-Contrast Favicon**: Created `pawelle-logo-dark.svg`, `pawelle-logo.svg`, and `<PawelleLogo />`. Created square contrast-optimized `favicon.svg` matching the PAWELLE emblem without outer frame, with light/dark adaptive CSS, and linked in `index.html`.
+- **Verified Product Assets**: Created bespoke vector assets `botanical-shampoo.svg` (`prd-1`) and `beechwood-brush.svg` (`prd-3`, replacing Unsplash dog photo) with resilient `<PawelleImage />` fallback handling.
 
-### Checkpoint 4: Backend & Database Foundation
-- [x] Supabase TypeScript client with offline fallback
-- [x] `supabase/migrations/001_initial_schema.sql` (18 relational tables, UUIDs, foreign keys, timestamps, indexes)
-- [x] `supabase/migrations/002_rls_policies.sql` (Row Level Security for guest, customer, staff, admin)
-- [x] `supabase/seed.sql` (Realistic sample categories, services, products, blog posts, site settings)
-- [x] Resilient, typed local relational store engine (`dbStore`) with persistent LocalStorage state
+---
 
-### Checkpoint 5: Pet Management & Booking System
-- [x] Multi-pet profile management (name, species, breed, age, weight, coat type, preferences, care notes)
-- [x] Real-time slot availability checking with collision detection preventing double-booking
-- [x] 4-step booking workflow (Pet -> Service -> Location & Time -> Review & Confirm)
-- [x] Appointment status tracking (Confirmed, In Progress, Completed, Cancelled, Rescheduled)
-
-### Checkpoint 6: Customer & Staff Applications
-- [x] Customer Dashboard: KPI metrics, upcoming appointment card, pet cards, recent orders
-- [x] Customer Pets: CRUD modal, photo cards, care/allergy notes
-- [x] Customer Appointments: Tabbed views, rescheduling modal, cancellation flow
-- [x] Customer Grooming Records: Detailed coat assessments, handling notes, before/after photos
-- [x] Staff Schedule: Daily roster, appointment status progress transitions
-- [x] Staff Grooming Record Creator: Log coat condition, products used, next visit recommendation
-- [x] Staff Pet Directory: Restricted access to pet allergy & sensitive handling notes
-
-### Checkpoint 7: Ecommerce & Apothecary
-- [x] Apothecary catalog with category filtering and search
-- [x] Product detail pages with active botanicals, benefits, stock status, quantity picker
-- [x] Shopping cart with persistent state, line items, quantity adjustment, auto-shipping
-- [x] Secure checkout workflow with delivery address validation, payment selector, and order creation
-- [x] Inventory deduction and order confirmation with unique order number (`PWL-XXXXXX`)
-
-### Checkpoint 8: Administration Dashboard
-- [x] Analytics Overview: Verified revenue, appointment counts, order metrics, pending actions
-- [x] Appointments Manager: Search, filter, status updater, internal director notes
-- [x] Customer Directory: Client list, companion pets, appointment history
-- [x] Pets Master Directory: Cross-client pet list with breed and allergy info
-- [x] Services & Pricing Manager: Add/edit rituals, pricing, durations, inclusions
-- [x] Staff & Rosters: Stylist profiles, specialties, studio assignments
-- [x] Products & Inventory: Stock level adjustments, SKU management, catalog additions
-- [x] Orders & Fulfillment: Tracking fulfillment states (processing, shipped, delivered)
-- [x] Client Messages: Reviewing inbound contact enquiries and updating status
-- [x] Reviews Moderation: Approving / unpublishing testimonials
-- [x] Blog Management: Drafting and publishing journal articles
-- [x] Studio Settings: Business coordinates, hours, cancellation window, maintenance toggle
-
-### Checkpoint 9: Refinement (Themes, RTL, Accessibility, SEO)
-- [x] Full Dark / Light mode with brand-authentic color tokens and persistence
-- [x] Native Right-to-Left (RTL) language direction support via logical properties and toggle
-- [x] Semantic HTML5, aria labels, keyboard navigation, focus rings
-- [x] Responsive layout optimization across 320px to 1920px
-
-### Checkpoint 10: Quality Assurance
-- [x] TypeScript validation (`npx tsc --noEmit`) passes with 0 errors
-- [x] Vitest automated unit and workflow tests pass 100%
-- [x] Production build (`npm run build`) builds cleanly with optimized vendor/icon/supabase code chunks
+## Test & Build Metrics
+- **TypeScript**: 0 errors (`npm run typecheck` / `tsc --noEmit`)
+- **Unit & Integration Tests**: 7 test files, 27 tests passing (`npm test` / `vitest run`)
+- **Production Build**: 0 errors (`npm run build` in 7.61s, 53 optimized chunks)

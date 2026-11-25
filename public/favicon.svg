@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <style>
+    .fav-wreath { fill: #283B32; }
+    .fav-vein { stroke: #D6C7AD; }
+    .fav-paw { fill: #A65B46; }
+    .fav-toe { fill: #283B32; }
+    .fav-star { fill: #A65B46; }
+    @media (prefers-color-scheme: dark) {
+      .fav-wreath { fill: #8FBFA7; }
+      .fav-vein { stroke: #D9CDBC; }
+      .fav-paw { fill: #D9826C; }
+      .fav-toe { fill: #F7F4EC; }
+      .fav-star { fill: #D9826C; }
+    }
+  </style>
+  <g transform="translate(4, 3)">
+    <!-- Decorative botanical wreath curve -->
+    <path class="fav-wreath" d="M 28,6 C 12,14 8,38 22,48 C 27,51 33,52 37,49 C 34,42 34,26 42,18 C 39,11 34,7 28,6 Z" opacity="0.95" />
+    <path class="fav-vein" d="M 30,8 C 23,17 24,32 32,41" stroke-width="1.5" stroke-linecap="round" />
+    
+    <!-- Stylized central paw pad in terracotta -->
+    <path class="fav-paw" d="M 27 31 C 23 31 21 35 22 39 C 23 43 27 45 31 45 C 35 45 39 43 40 39 C 41 35 39 31 35 31 C 33 29 29 29 27 31 Z" />
+    
+    <!-- Toe pads -->
+    <ellipse class="fav-toe" cx="22" cy="24" rx="3.0" ry="4.2" transform="rotate(-20 22 24)" />
+    <ellipse class="fav-toe" cx="28" cy="20" rx="3.2" ry="4.4" />
+    <ellipse class="fav-toe" cx="35" cy="21" rx="3.2" ry="4.4" transform="rotate(15 35 21)" />
+    <ellipse class="fav-toe" cx="40" cy="25" rx="2.8" ry="4.0" transform="rotate(30 40 25)" />
+    
+    <!-- Star accent -->
+    <path class="fav-star" d="M 46,12 Q 46,15 49,15 Q 46,15 46,18 Q 46,15 43,15 Q 46,15 46,12 Z" />
+  </g>
+</svg>

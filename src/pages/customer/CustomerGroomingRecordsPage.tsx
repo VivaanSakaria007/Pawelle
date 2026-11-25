@@ -1,10 +1,19 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../features/authentication/AuthContext';
 import { dbStore } from '../../services/store';
-import { Sparkles, Calendar, UserCheck, Droplets, CheckCircle2 } from 'lucide-react';
+import { useStoreSync } from '../../hooks/useStoreSync';
+import { Sparkles, Calendar, CheckCircle2 } from 'lucide-react';
 
 export const CustomerGroomingRecordsPage: React.FC = () => {
-  const records = dbStore.getGroomingRecords();
-  const pets = dbStore.getPets();
+  const { user } = useAuth();
+  useStoreSync();
+  const ownerId = user?.id || '';
+  const pets = ownerId ? dbStore.getPets(ownerId) : [];
+  const ownedPetIds = new Set(pets.map(p => p.id));
+  const records = ownerId
+    ? dbStore.getGroomingRecords().filter(record => ownedPetIds.has(record.pet_id))
+    : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -15,6 +24,18 @@ export const CustomerGroomingRecordsPage: React.FC = () => {
         </p>
       </div>
 
+      {records.length === 0 ? (
+        <div className="card-surface" style={{ textAlign: 'center', padding: '56px 24px' }}>
+          <Sparkles size={38} style={{ color: 'var(--color-sand)', marginBottom: '14px', marginInline: 'auto' }} />
+          <h2 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>No Grooming Records Yet</h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '20px', marginInline: 'auto' }}>
+            Once your companion completes an atelier session, detailed coat assessments and stylist notes appear here.
+          </p>
+          <Link to="/customer/booking" className="btn btn-primary btn-sm">
+            Book a Sanctuary Session
+          </Link>
+        </div>
+      ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {records.map(record => {
           const pet = pets.find(p => p.id === record.pet_id);
@@ -132,6 +153,7 @@ export const CustomerGroomingRecordsPage: React.FC = () => {
           );
         })}
       </div>
+      )}
     </div>
   );
 };

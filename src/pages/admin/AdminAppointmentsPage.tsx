@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { dbStore } from '../../services/store';
+import { useStoreSync } from '../../hooks/useStoreSync';
 import { Appointment, AppointmentStatus } from '../../types';
 import {
-  Calendar,
   Search,
-  Filter,
   Clock,
   CheckCircle2,
   Edit2,
@@ -12,7 +11,8 @@ import {
 } from 'lucide-react';
 
 export const AdminAppointmentsPage: React.FC = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>(() => dbStore.getAppointments());
+  useStoreSync();
+  const appointments = dbStore.getAppointments();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
@@ -48,7 +48,6 @@ export const AdminAppointmentsPage: React.FC = () => {
     if (!editingAppt) return;
 
     dbStore.updateAppointmentStatus(editingAppt.id, modalStatus, modalNotes);
-    setAppointments(dbStore.getAppointments());
     setEditingAppt(null);
     showToast(`Appointment status updated to ${modalStatus.toUpperCase()}`);
   };

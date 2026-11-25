@@ -26,3 +26,9 @@ dist-ssr
 # Environment
 .env
 .env.production
+
+# Local cross-device runtime database
+.pawelle-local-db.json*
+
+# Local driver installer
+/public/assets/products/whql-amd-software-adrenalin-edition-26.5.2-win11-may-vega-polaris.exe

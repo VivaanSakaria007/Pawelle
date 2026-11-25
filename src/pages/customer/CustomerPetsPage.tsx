@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../features/authentication/AuthContext';
 import { dbStore } from '../../services/store';
+import { useStoreSync } from '../../hooks/useStoreSync';
+import { PetAvatar } from '../../components/common/PetAvatar';
+import { readAndCompressImageFile } from '../../utils/imageUpload';
 import { Pet } from '../../types';
 import {
   Heart,
@@ -8,16 +11,15 @@ import {
   Edit2,
   Trash2,
   CheckCircle2,
-  AlertCircle,
   X,
-  ShieldCheck,
-  Sparkles
+  Camera
 } from 'lucide-react';
 
 export const CustomerPetsPage: React.FC = () => {
   const { user } = useAuth();
-  const ownerId = user?.id || 'usr-demo-customer';
-  const [pets, setPets] = useState<Pet[]>(() => dbStore.getPets(ownerId));
+  useStoreSync();
+  const ownerId = user?.id || '';
+  const pets = ownerId ? dbStore.getPets(ownerId) : [];
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
@@ -32,9 +34,16 @@ export const CustomerPetsPage: React.FC = () => {
   const [groomingPreferences, setGroomingPreferences] = useState('');
   const [careNotes, setCareNotes] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [photoUploadError, setPhotoUploadError] = useState('');
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setModalOpen(false);
+    setEditingPet(null);
+    setDeleteConfirmId(null);
+  }, [ownerId]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -51,7 +60,8 @@ export const CustomerPetsPage: React.FC = () => {
     setCoatType('Silky Coat');
     setGroomingPreferences('');
     setCareNotes('');
-    setPhotoUrl('https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80');
+    setPhotoUrl('');
+    setPhotoUploadError('');
     setModalOpen(true);
   };
 
@@ -66,14 +76,30 @@ export const CustomerPetsPage: React.FC = () => {
     setGroomingPreferences(pet.grooming_preferences || '');
     setCareNotes(pet.care_notes || '');
     setPhotoUrl(pet.photo_url || '');
+    setPhotoUploadError('');
     setModalOpen(true);
+  };
+
+  const handlePetPhotoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoUploadError('');
+    try {
+      const compressed = await readAndCompressImageFile(file);
+      setPhotoUrl(compressed);
+    } catch (err: any) {
+      setPhotoUploadError(err?.message || 'Unable to process this image file.');
+    }
+    e.target.value = '';
   };
 
   const handleSavePet = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !breed.trim()) return;
+    if (!ownerId || !name.trim() || !breed.trim()) return;
 
-    if (editingPet) {
+    const cleanPhotoUrl = photoUrl.trim() || undefined;
+
+    if (editingPet && editingPet.owner_id === ownerId) {
       dbStore.updatePet(editingPet.id, {
         name: name.trim(),
         species,
@@ -83,10 +109,10 @@ export const CustomerPetsPage: React.FC = () => {
         coat_type: coatType,
         grooming_preferences: groomingPreferences.trim(),
         care_notes: careNotes.trim(),
-        photo_url: photoUrl
+        photo_url: cleanPhotoUrl
       });
       showToast(`Updated profile for ${name}`);
-    } else {
+    } else if (!editingPet) {
       dbStore.createPet({
         owner_id: ownerId,
         name: name.trim(),
@@ -97,20 +123,18 @@ export const CustomerPetsPage: React.FC = () => {
         coat_type: coatType,
         grooming_preferences: groomingPreferences.trim(),
         care_notes: careNotes.trim(),
-        photo_url: photoUrl || (species === 'dog'
-          ? 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80'
-          : 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80')
+        photo_url: cleanPhotoUrl
       });
       showToast(`Registered new pet profile: ${name}`);
     }
 
-    setPets(dbStore.getPets(ownerId));
     setModalOpen(false);
   };
 
   const handleDeletePet = (id: string) => {
+    const target = pets.find(p => p.id === id);
+    if (!target || target.owner_id !== ownerId) return;
     dbStore.deletePet(id);
-    setPets(dbStore.getPets(ownerId));
     setDeleteConfirmId(null);
     showToast('Pet profile deleted.');
   };
@@ -137,8 +161,20 @@ export const CustomerPetsPage: React.FC = () => {
       )}
 
       {/* Pet Profiles Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-        {pets.map(pet => (
+      {pets.length === 0 ? (
+        <div className="card-surface" style={{ textAlign: 'center', padding: '56px 24px' }}>
+          <Heart size={38} style={{ color: 'var(--color-sand)', marginBottom: '14px', marginInline: 'auto' }} />
+          <h2 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>No Companions Registered Yet</h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginBottom: '20px', marginInline: 'auto' }}>
+            Create a personal profile for your dog or cat so our stylists tailor every wash and scissor silhouette.
+          </p>
+          <button onClick={handleOpenAddModal} className="btn btn-primary btn-sm">
+            <Plus size={16} /> Register Your First Pet
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '24px' }}>
+          {pets.map(pet => (
           <div
             key={pet.id}
             className="card-surface"
@@ -151,11 +187,7 @@ export const CustomerPetsPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <img
-                src={pet.photo_url || 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=200&q=80'}
-                alt={pet.name}
-                style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-sand)' }}
-              />
+              <PetAvatar photoUrl={pet.photo_url} name={pet.name} size={72} bordered />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <h2 style={{ fontSize: '1.4rem', margin: 0 }}>{pet.name}</h2>
@@ -216,7 +248,8 @@ export const CustomerPetsPage: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Add / Edit Pet Modal */}
       {modalOpen && (
@@ -252,7 +285,7 @@ export const CustomerPetsPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSavePet} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="responsive-two-col">
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Pet Name *</label>
                   <input
@@ -278,7 +311,7 @@ export const CustomerPetsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px' }}>
+              <div className="responsive-three-col">
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Breed *</label>
                   <input
@@ -311,6 +344,49 @@ export const CustomerPetsPage: React.FC = () => {
                     onChange={(e) => setWeight(Number(e.target.value))}
                     className="form-input"
                   />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Companion Photo (Optional)</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+                  <PetAvatar photoUrl={photoUrl} name={name || 'Pet'} size={56} bordered />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '200px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <label
+                        className="btn btn-secondary btn-sm"
+                        style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <Camera size={14} /> Upload Photo
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePetPhotoFile}
+                          aria-label="Upload pet photo"
+                          style={{ display: 'none' }}
+                        />
+                      </label>
+                      {photoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setPhotoUrl('')}
+                          className="btn btn-ghost btn-sm"
+                          style={{ color: 'var(--color-danger)' }}
+                        >
+                          Remove Photo
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={photoUrl.startsWith('data:') ? '' : photoUrl}
+                      onChange={(e) => setPhotoUrl(e.target.value)}
+                      placeholder={photoUrl.startsWith('data:') ? 'Uploaded photo attached (paste URL to replace)' : 'Or paste an image URL (optional)...'}
+                      className="form-input"
+                      style={{ fontSize: '0.85rem', padding: '8px 12px' }}
+                    />
+                    {photoUploadError && <span className="form-error">{photoUploadError}</span>}
+                  </div>
                 </div>
               </div>
 

@@ -110,7 +110,7 @@ export const AdminBlogPage: React.FC = () => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '24px' }}>
         {posts.map(post => (
           <div key={post.id} className="card-surface" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -188,7 +188,7 @@ export const AdminBlogPage: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="responsive-two-col">
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Author Name</label>
                   <input

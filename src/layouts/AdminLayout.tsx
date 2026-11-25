@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/authentication/AuthContext';
-import { RoleSwitcherBanner } from '../components/navigation/RoleSwitcherBanner';
 import { Header } from '../components/navigation/Header';
 import {
   BarChart3,
@@ -27,9 +26,14 @@ export const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [user?.id]);
+
   const handleLogout = async () => {
+    setSidebarOpen(false);
     await logout();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
   const navLinks = [
@@ -49,7 +53,6 @@ export const AdminLayout: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg-primary)' }}>
-      <RoleSwitcherBanner />
       <Header />
 
       <div className="container" style={{ flex: 1, paddingBlock: '32px' }}>
@@ -153,9 +156,9 @@ export const AdminLayout: React.FC = () => {
             </nav>
           </aside>
 
-          {/* Main Area */}
+          {/* Main Area — keyed by user identity */}
           <main style={{ minWidth: 0 }}>
-            <Outlet />
+            <Outlet key={user?.id || 'guest'} />
           </main>
         </div>
       </div>

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { dbStore } from '../../services/store';
-import { Review } from '../../types';
+import { useStoreSync } from '../../hooks/useStoreSync';
 import { Star, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 
 export const AdminReviewsPage: React.FC = () => {
-  const [reviews, setReviews] = useState<Review[]>(() => dbStore.getReviews(false));
+  useStoreSync();
+  const reviews = dbStore.getReviews(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -14,13 +15,11 @@ export const AdminReviewsPage: React.FC = () => {
 
   const handleToggleApproval = (id: string, currentApproval: boolean) => {
     dbStore.setReviewApproved(id, !currentApproval);
-    setReviews(dbStore.getReviews(false));
     showToast(`Review ${!currentApproval ? 'approved and published' : 'unapproved'}.`);
   };
 
   const handleDelete = (id: string) => {
     dbStore.deleteReview(id);
-    setReviews(dbStore.getReviews(false));
     showToast('Review deleted.');
   };
 
@@ -39,7 +38,7 @@ export const AdminReviewsPage: React.FC = () => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '24px' }}>
         {reviews.map(rev => (
           <div key={rev.id} className="card-surface" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

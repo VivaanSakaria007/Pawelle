@@ -2,17 +2,19 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../features/authentication/AuthContext';
 import { dbStore } from '../../services/store';
+import { useStoreSync } from '../../hooks/useStoreSync';
 import { ShoppingBag, PackageCheck, Clock, ExternalLink } from 'lucide-react';
 
 export const CustomerOrdersPage: React.FC = () => {
   const { user } = useAuth();
-  const customerId = user?.id || 'usr-demo-customer';
-  const orders = dbStore.getOrders(customerId);
+  useStoreSync();
+  const customerId = user?.id || '';
+  const orders = customerId ? dbStore.getOrders(customerId) : [];
 
   if (orders.length === 0) {
     return (
       <div className="card-surface" style={{ textAlign: 'center', padding: '64px' }}>
-        <ShoppingBag size={40} style={{ color: 'var(--color-sand)', marginBottom: '16px' }} />
+        <ShoppingBag size={40} style={{ color: 'var(--color-sand)', marginBottom: '16px', marginInline: 'auto' }} />
         <h2>No Orders Found</h2>
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: '24px' }}>
           Explore our organic apothecary formulations, herbal salves, and grooming accessories.

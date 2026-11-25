@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../features/cart/CartContext';
 import { dbStore } from '../../services/store';
+import { PawelleImage } from '../../components/common/PawelleImage';
 import { Bookmark, ShoppingBag, Trash2 } from 'lucide-react';
 
 export const CustomerWishlistPage: React.FC = () => {
@@ -12,7 +13,7 @@ export const CustomerWishlistPage: React.FC = () => {
   if (savedProducts.length === 0) {
     return (
       <div className="card-surface" style={{ textAlign: 'center', padding: '64px' }}>
-        <Bookmark size={40} style={{ color: 'var(--color-sand)', marginBottom: '16px' }} />
+        <Bookmark size={40} style={{ color: 'var(--color-sand)', marginBottom: '16px', marginInline: 'auto' }} />
         <h2>Your Wishlist is Empty</h2>
         <p style={{ color: 'var(--color-text-secondary)', marginBottom: '24px' }}>
           Save products you love from our apothecary collection for later.
@@ -36,9 +37,10 @@ export const CustomerWishlistPage: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
         {savedProducts.map(product => (
           <div key={product.id} className="card-surface" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <img
+            <PawelleImage
               src={product.image_url}
               alt={product.name}
+              fallbackSrc="/assets/products/botanical-shampoo.jpg"
               style={{ width: '100%', height: '220px', objectFit: 'cover' }}
             />
             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -57,7 +59,7 @@ export const CustomerWishlistPage: React.FC = () => {
                   className="btn btn-primary btn-sm"
                   style={{ flex: 1 }}
                 >
-                  <ShoppingBag size={14} /> Add to Bag
+                  <ShoppingBag size={14} /> Add to Cart
                 </button>
                 <button
                   onClick={() => toggleWishlist(product.id)}

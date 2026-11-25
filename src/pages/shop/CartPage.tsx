@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../features/cart/CartContext';
+import { PawelleImage } from '../../components/common/PawelleImage';
 import {
   ShoppingBag,
   Trash2,
@@ -70,7 +71,7 @@ export const CartPage: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 310px), 1fr))',
             gap: '32px',
             alignItems: 'start'
           }}
@@ -93,9 +94,10 @@ export const CartPage: React.FC = () => {
                     flexWrap: 'wrap'
                   }}
                 >
-                  <img
+                  <PawelleImage
                     src={item.product.image_url}
                     alt={item.product.name}
+                    fallbackSrc="/assets/products/botanical-shampoo.jpg"
                     style={{ width: '90px', height: '90px', borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
                   />
 
@@ -117,7 +119,7 @@ export const CartPage: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-pill)', backgroundColor: 'var(--color-bg-primary)', padding: '2px' }}>
                     <button
                       onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                      style={{ background: 'none', border: 'none', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      style={{ background: 'none', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)' }}
                       aria-label="Decrease quantity"
                     >
                       <Minus size={14} />
@@ -125,7 +127,7 @@ export const CartPage: React.FC = () => {
                     <span style={{ paddingInline: '12px', fontWeight: 600, fontSize: '0.9rem' }}>{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      style={{ background: 'none', border: 'none', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      style={{ background: 'none', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)' }}
                       aria-label="Increase quantity"
                     >
                       <Plus size={14} />
