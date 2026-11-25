@@ -186,24 +186,35 @@ export const Header: React.FC = () => {
       {/* Tier 1: Boutique Mayfair Coordinates & Locale Strip */}
       <div className="header-top-ticker">
         <div
-          className="container"
+          className="container header-ticker-row"
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            flexWrap: 'wrap',
             fontSize: '0.72rem',
             letterSpacing: '0.095em',
             textTransform: 'uppercase',
             color: 'var(--color-text-secondary)',
             paddingBlock: '2px',
-            gap: '12px'
+            rowGap: '4px',
+            columnGap: '16px'
           }}
         >
-          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', minWidth: 0 }}>
-            <span className="hide-mobile" style={{ whiteSpace: 'nowrap' }}>
+          <div
+            style={{
+              display: 'flex',
+              columnGap: '12px',
+              rowGap: '4px',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              minWidth: 0
+            }}
+          >
+            <span className="hide-tablet-address" style={{ whiteSpace: 'nowrap' }}>
               Mayfair Flagship &bull; 42 South Audley St, London W1K
             </span>
-            <span className="show-mobile-inline" style={{ display: 'none', whiteSpace: 'nowrap' }}>
+            <span className="show-compact-address" style={{ display: 'none', whiteSpace: 'nowrap' }}>
               Mayfair W1K
             </span>
             <span style={{ opacity: 0.35 }} className="hide-mobile">
@@ -217,7 +228,7 @@ export const Header: React.FC = () => {
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', flexShrink: 0, maxWidth: '100%' }}>
             <a
               href="tel:+442079460812"
               style={{ color: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap' }}
@@ -1122,6 +1133,14 @@ export const Header: React.FC = () => {
           .header-theme-pill {
             width: 38px !important;
             padding-inline: 0 !important;
+          }
+        }
+        @media (max-width: 1080px) {
+          .hide-tablet-address {
+            display: none !important;
+          }
+          .show-compact-address {
+            display: inline !important;
           }
         }
         @media (max-width: 640px) {
