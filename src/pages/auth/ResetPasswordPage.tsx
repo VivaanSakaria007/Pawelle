@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../features/authentication/AuthContext';
 import { Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { PawelleLogo } from '../../components/common/PawelleLogo';
@@ -7,10 +7,12 @@ import { PawelleLogo } from '../../components/common/PawelleLogo';
 export const ResetPasswordPage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [success, setSuccess] = useState(false);
   const { completePasswordReset, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const recoveryToken = searchParams.get('token') || undefined;
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ export const ResetPasswordPage: React.FC = () => {
     }
 
     try {
-      await completePasswordReset(newPassword);
+      await completePasswordReset(newPassword, recoveryToken);
       setSuccess(true);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to update password.');
@@ -86,7 +88,7 @@ export const ResetPasswordPage: React.FC = () => {
                 <div style={{ position: 'relative' }}>
                   <input
                     id="reset-new-password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     minLength={8}
                     autoComplete="new-password"
@@ -105,7 +107,7 @@ export const ResetPasswordPage: React.FC = () => {
                 <div style={{ position: 'relative' }}>
                   <input
                     id="reset-confirm-password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     minLength={8}
                     autoComplete="new-password"
@@ -117,6 +119,34 @@ export const ResetPasswordPage: React.FC = () => {
                   />
                   <Lock size={16} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', insetInlineStart: '12px', color: 'var(--color-text-secondary)' }} />
                 </div>
+                <label
+                  htmlFor="show-reset-password"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginTop: '10px',
+                    fontSize: '0.85rem',
+                    color: 'var(--color-text-secondary)',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
+                >
+                  <input
+                    id="show-reset-password"
+                    type="checkbox"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      accentColor: 'var(--color-forest)',
+                      cursor: 'pointer',
+                      margin: 0
+                    }}
+                  />
+                  <span>Show password</span>
+                </label>
               </div>
 
               <button

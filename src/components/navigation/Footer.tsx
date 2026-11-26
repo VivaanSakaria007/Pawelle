@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { PawelleLogo } from '../common/PawelleLogo';
+import { dbStore } from '../../services/store';
 
 export const Footer: React.FC = () => {
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -10,8 +11,13 @@ export const Footer: React.FC = () => {
   const handleNewsletter = (e: React.FormEvent) => {
     e.preventDefault();
     if (newsletterEmail && newsletterEmail.includes('@')) {
-      setSubscribed(true);
-      setNewsletterEmail('');
+      try {
+        dbStore.subscribeNewsletter(newsletterEmail);
+        setSubscribed(true);
+        setNewsletterEmail('');
+      } catch {
+        // invalid email format caught cleanly
+      }
     }
   };
 
@@ -195,9 +201,9 @@ export const Footer: React.FC = () => {
             &copy; {new Date().getFullYear()} PAWELLE Pet Grooming &amp; Spa Ltd. All rights reserved.
           </div>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-            <Link to="/about" style={{ color: 'var(--color-footer-text-muted)' }}>Privacy Policy</Link>
-            <Link to="/about" style={{ color: 'var(--color-footer-text-muted)' }}>Terms of Service</Link>
-            <Link to="/pricing" style={{ color: 'var(--color-footer-text-muted)' }}>Cancellation Policy</Link>
+            <Link to="/privacy" style={{ color: 'var(--color-footer-text-muted)' }}>Privacy Policy</Link>
+            <Link to="/terms" style={{ color: 'var(--color-footer-text-muted)' }}>Terms of Service</Link>
+            <Link to="/cancellation-policy" style={{ color: 'var(--color-footer-text-muted)' }}>Cancellation Policy</Link>
             <Link to="/coming-soon" style={{ color: 'var(--color-footer-text-muted)' }}>Locations Expansion</Link>
           </div>
         </div>

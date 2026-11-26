@@ -20,9 +20,16 @@ interface StoredAccount {
   passwordHash: string;
 }
 
+interface PasswordResetRecord {
+  email: string;
+  tokenHash: string;
+  expiresAt: number;
+}
+
 interface SyncDatabase {
   revision: number;
   registeredUsers: Record<string, StoredAccount>;
+  passwordResets?: Record<string, PasswordResetRecord>;
   collections: Record<string, unknown>;
 }
 
@@ -42,7 +49,8 @@ const ALLOWED_COLLECTION_KEYS = new Set([
   'grooming_records',
   'orders',
   'contact_messages',
-  'customers'
+  'customers',
+  'newsletter_subscribers'
 ]);
 
 const RESERVED_SANDBOX_EMAILS = new Set([
@@ -55,6 +63,10 @@ function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString('hex');
   const derived = crypto.scryptSync(password, salt, 32).toString('hex');
   return `scrypt:${salt}:${derived}`;
+}
+
+function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 function verifyPassword(password: string, stored: string): boolean {
@@ -103,9 +115,52 @@ function sendJson(res: ServerResponse, status: number, payload: unknown): void {
   res.end(JSON.stringify(payload));
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+async function sendTransactionalEmail(options: {
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<{ sent: boolean; reason?: string }> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) {
+    return { sent: false, reason: 'RESEND_API_KEY not configured' };
+  }
+  const fromEmail = process.env.RESEND_FROM_EMAIL?.trim() || 'PAWELLE Sanctuary <onboarding@resend.dev>';
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [options.to],
+        subject: options.subject,
+        html: options.html
+      })
+    });
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      return { sent: false, reason: `Resend HTTP ${response.status}: ${errText}` };
+    }
+    return { sent: true };
+  } catch (err: any) {
+    return { sent: false, reason: err?.message || 'Email request failed' };
+  }
+}
+
 /**
- * Shared local persistence & Server-Sent Events (SSE) plugin for dev & preview servers.
- * Enables instant cross-browser-profile and cross-device sync over LAN without requiring Supabase keys.
+ * Shared persistence, server-side validation, rate limiting, and SSE sync plugin.
+ * Powers cross-device realtime sync, health checks, password reset tokens, and optional Resend emails.
  */
 export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
   const storagePath =
@@ -113,6 +168,22 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
     process.env.PAWELLE_DB_PATH ||
     path.resolve(process.cwd(), '.pawelle-local-db.json');
   const sseClients = new Set<ServerResponse>();
+  const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+
+  const checkRateLimit = (ip: string, bucket: string, maxRequests: number, windowMs: number): boolean => {
+    const key = `${bucket}:${ip}`;
+    const now = Date.now();
+    const existing = rateBuckets.get(key);
+    if (!existing || now > existing.resetAt) {
+      rateBuckets.set(key, { count: 1, resetAt: now + windowMs });
+      return true;
+    }
+    if (existing.count >= maxRequests) {
+      return false;
+    }
+    existing.count += 1;
+    return true;
+  };
 
   const loadDb = (): SyncDatabase => {
     try {
@@ -121,14 +192,17 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
         const parsed = JSON.parse(raw) as Partial<SyncDatabase>;
         return {
           revision: typeof parsed.revision === 'number' ? parsed.revision : 1,
-          registeredUsers: parsed.registeredUsers && typeof parsed.registeredUsers === 'object' ? parsed.registeredUsers : {},
+          registeredUsers:
+            parsed.registeredUsers && typeof parsed.registeredUsers === 'object' ? parsed.registeredUsers : {},
+          passwordResets:
+            parsed.passwordResets && typeof parsed.passwordResets === 'object' ? parsed.passwordResets : {},
           collections: parsed.collections && typeof parsed.collections === 'object' ? parsed.collections : {}
         };
       }
     } catch {
       // Fallback to fresh store
     }
-    return { revision: 1, registeredUsers: {}, collections: {} };
+    return { revision: 1, registeredUsers: {}, passwordResets: {}, collections: {} };
   };
 
   let db: SyncDatabase = loadDb();
@@ -199,6 +273,12 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
 
   const attachMiddleware = (middlewares: any) => {
     middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+      // Apply Baseline Production Security Headers
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+      res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
       const urlPath = (req.url || '').split('?')[0];
       if (!urlPath.startsWith('/api/pawelle-sync/')) {
         return next();
@@ -213,7 +293,27 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
         return;
       }
 
+      const clientIp = String(
+        (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+          req.socket?.remoteAddress ||
+          'unknown'
+      );
+
       try {
+        // 0. Health Check for Render / Uptime Monitors
+        if (req.method === 'GET' && urlPath === '/api/pawelle-sync/health') {
+          sendJson(res, 200, {
+            status: 'ok',
+            service: 'pawelle-sync',
+            revision: db.revision,
+            uptimeSeconds: Math.round(process.uptime()),
+            emailConfigured: Boolean(process.env.RESEND_API_KEY?.trim()),
+            supabaseConfigured: Boolean(process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY),
+            timestamp: new Date().toISOString()
+          });
+          return;
+        }
+
         // 1. SSE Event Stream
         if (req.method === 'GET' && urlPath === '/api/pawelle-sync/stream') {
           res.statusCode = 200;
@@ -241,7 +341,7 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
           return;
         }
 
-        // 2. Full State Read (never includes password hashes)
+        // 2. Full State Read (never includes password hashes or reset tokens)
         if (req.method === 'GET' && urlPath === '/api/pawelle-sync/state') {
           sendJson(res, 200, {
             revision: db.revision,
@@ -251,8 +351,13 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
           return;
         }
 
-        // 3. Atomic Upsert / Delete / Replace Collection Action
+        // 3. Atomic Upsert / Delete / Replace Collection Action with Concurrency Validation
         if (req.method === 'POST' && urlPath === '/api/pawelle-sync/action') {
+          if (!checkRateLimit(clientIp, 'action', 180, 60_000)) {
+            sendJson(res, 429, { error: 'Rate limit exceeded. Please wait briefly and try again.' });
+            return;
+          }
+
           const body = await readJsonBody(req);
           const key = String(body?.key || '');
           const op = String(body?.op || 'replace');
@@ -268,6 +373,46 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
             }
             const arr = [...(db.collections[key] as any[])];
             const item = body.item;
+
+            // Server-side atomic double-booking check for Appointments
+            if (key === 'appointments' && item.status !== 'cancelled' && item.status !== 'no_show') {
+              const targetStart = new Date(item.starts_at).getTime();
+              const targetEnd = new Date(item.ends_at).getTime();
+              if (Number.isFinite(targetStart) && Number.isFinite(targetEnd)) {
+                const collision = arr.find((existing: any) => {
+                  if (!existing || existing.id === item.id) return false;
+                  if (existing.location_id !== item.location_id) return false;
+                  if (existing.status === 'cancelled' || existing.status === 'no_show') return false;
+                  const aStart = new Date(existing.starts_at).getTime();
+                  const aEnd = new Date(existing.ends_at).getTime();
+                  return targetStart < aEnd && targetEnd > aStart;
+                });
+                if (collision) {
+                  sendJson(res, 409, {
+                    error: 'This suite time slot was just reserved by another guest. Please select another time.'
+                  });
+                  return;
+                }
+              }
+            }
+
+            // Server-side inventory guard for Orders
+            if (key === 'orders' && Array.isArray(item.items) && Array.isArray(db.collections.products)) {
+              const isNewOrder = !arr.some((existing: any) => existing?.id === item.id);
+              if (isNewOrder) {
+                const serverProducts = db.collections.products as any[];
+                for (const line of item.items) {
+                  const prod = serverProducts.find((p: any) => p?.id === line.product_id);
+                  if (prod && typeof prod.stock_quantity === 'number' && prod.stock_quantity < Number(line.quantity || 0)) {
+                    sendJson(res, 409, {
+                      error: `Insufficient stock on server for ${prod.name}. Remaining: ${prod.stock_quantity}.`
+                    });
+                    return;
+                  }
+                }
+              }
+            }
+
             const idx = item.id ? arr.findIndex((existing: any) => existing?.id === item.id) : -1;
             if (idx >= 0) {
               arr[idx] = { ...arr[idx], ...item };
@@ -298,6 +443,11 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
 
         // 4. Customer Registration across all devices / Chrome profiles
         if (req.method === 'POST' && urlPath === '/api/pawelle-sync/auth/register') {
+          if (!checkRateLimit(clientIp, 'auth', 25, 60_000)) {
+            sendJson(res, 429, { error: 'Too many authentication attempts. Please wait a minute and try again.' });
+            return;
+          }
+
           const body = await readJsonBody(req);
           const cleanEmail = String(body?.email || '').trim().toLowerCase();
           const cleanName = String(body?.fullName || '').trim();
@@ -306,6 +456,10 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
 
           if (!cleanEmail || !cleanName || !password) {
             sendJson(res, 400, { error: 'Please complete all required fields (Full Name, Email, Password).' });
+            return;
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+            sendJson(res, 400, { error: 'Please enter a valid email address.' });
             return;
           }
           if (password.length < 8) {
@@ -335,12 +489,24 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
           db.revision += 1;
           saveDb();
           broadcastUpdate(['customers']);
+
+          void sendTransactionalEmail({
+            to: cleanEmail,
+            subject: 'Welcome to PAWELLE Sanctuary',
+            html: `<p>Dear ${escapeHtml(cleanName)},</p><p>Your PAWELLE client sanctuary profile has been created. You may now register companions and reserve tailored grooming sessions.</p>`
+          });
+
           sendJson(res, 201, { profile: newProfile, revision: db.revision });
           return;
         }
 
         // 5. Cross-device Login Verification
         if (req.method === 'POST' && urlPath === '/api/pawelle-sync/auth/login') {
+          if (!checkRateLimit(clientIp, 'auth', 25, 60_000)) {
+            sendJson(res, 429, { error: 'Too many sign-in attempts. Please wait a minute and try again.' });
+            return;
+          }
+
           const body = await readJsonBody(req);
           const cleanEmail = String(body?.email || '').trim().toLowerCase();
           const password = String(body?.password || '');
@@ -365,7 +531,101 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
           return;
         }
 
-        // 6. Cross-device Customer Profile Updates & Sync
+        // 6. Password Reset Request (stores hashed 30-min token & dispatches email if Resend configured)
+        if (req.method === 'POST' && urlPath === '/api/pawelle-sync/auth/request-reset') {
+          if (!checkRateLimit(clientIp, 'auth', 15, 60_000)) {
+            sendJson(res, 429, { error: 'Too many reset requests. Please wait a minute and try again.' });
+            return;
+          }
+
+          const body = await readJsonBody(req);
+          const cleanEmail = String(body?.email || '').trim().toLowerCase();
+          const origin = String(body?.origin || '').replace(/\/$/, '');
+
+          if (!cleanEmail || !cleanEmail.includes('@')) {
+            sendJson(res, 400, { error: 'Please provide a valid email address.' });
+            return;
+          }
+
+          let emailDispatched = false;
+          const account = db.registeredUsers[cleanEmail];
+          if (account) {
+            const rawToken = crypto.randomBytes(24).toString('hex');
+            const tokenHash = hashToken(rawToken);
+            if (!db.passwordResets) db.passwordResets = {};
+
+            // Clean expired tokens
+            const now = Date.now();
+            for (const [key, rec] of Object.entries(db.passwordResets)) {
+              if (!rec || rec.expiresAt < now) delete db.passwordResets[key];
+            }
+
+            db.passwordResets[tokenHash] = {
+              email: cleanEmail,
+              tokenHash,
+              expiresAt: now + 30 * 60 * 1000
+            };
+            saveDb();
+
+            const resetLink = origin ? `${origin}/reset-password?token=${rawToken}` : `/reset-password?token=${rawToken}`;
+            const emailRes = await sendTransactionalEmail({
+              to: cleanEmail,
+              subject: 'PAWELLE Password Reset Instructions',
+              html: `<p>Hello ${escapeHtml(account.profile.full_name)},</p><p>Reset your PAWELLE password using the secure link below (valid for 30 minutes):</p><p><a href="${escapeHtml(resetLink)}">${escapeHtml(resetLink)}</a></p>`
+            });
+            emailDispatched = emailRes.sent;
+          }
+
+          sendJson(res, 200, { ok: true, emailDispatched });
+          return;
+        }
+
+        // 7. Password Reset Completion (by recovery token OR active signed-in email)
+        if (req.method === 'POST' && urlPath === '/api/pawelle-sync/auth/complete-reset') {
+          if (!checkRateLimit(clientIp, 'auth', 15, 60_000)) {
+            sendJson(res, 429, { error: 'Too many password updates. Please wait a minute.' });
+            return;
+          }
+
+          const body = await readJsonBody(req);
+          const token = typeof body?.token === 'string' ? body.token.trim() : '';
+          const directEmail = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+          const newPassword = String(body?.newPassword || '');
+
+          if (newPassword.length < 8) {
+            sendJson(res, 400, { error: 'New password must be at least 8 characters long.' });
+            return;
+          }
+
+          let targetEmail = '';
+          if (token) {
+            const tHash = hashToken(token);
+            const record = db.passwordResets?.[tHash];
+            if (!record || record.expiresAt < Date.now()) {
+              sendJson(res, 400, { error: 'This password reset link is invalid or has expired. Please request a new one.' });
+              return;
+            }
+            targetEmail = record.email;
+            delete db.passwordResets![tHash];
+          } else if (directEmail && db.registeredUsers[directEmail]) {
+            targetEmail = directEmail;
+          } else {
+            sendJson(res, 400, { error: 'Invalid or missing password reset authorization.' });
+            return;
+          }
+
+          if (!db.registeredUsers[targetEmail]) {
+            sendJson(res, 404, { error: 'Registered account not found.' });
+            return;
+          }
+
+          db.registeredUsers[targetEmail].passwordHash = hashPassword(newPassword);
+          saveDb();
+          sendJson(res, 200, { ok: true });
+          return;
+        }
+
+        // 8. Cross-device Customer Profile Updates & Sync
         if (req.method === 'POST' && urlPath === '/api/pawelle-sync/auth/profile') {
           const body = await readJsonBody(req);
           const cleanEmail = String(body?.email || '').trim().toLowerCase();
@@ -396,6 +656,31 @@ export function pawelleSyncPlugin(dbFilePath?: string): Plugin {
           saveDb();
           broadcastUpdate(['customers']);
           sendJson(res, 200, { ok: true, revision: db.revision });
+          return;
+        }
+
+        // 9. Transactional Notification Dispatch Hook (Appointments, Orders, Inquiry Replies)
+        if (req.method === 'POST' && urlPath === '/api/pawelle-sync/email') {
+          if (!checkRateLimit(clientIp, 'email', 30, 60_000)) {
+            sendJson(res, 429, { error: 'Email rate limit exceeded.' });
+            return;
+          }
+          const body = await readJsonBody(req);
+          const to = String(body?.to || '').trim();
+          const subject = String(body?.subject || '').trim();
+          const message = String(body?.message || '').trim();
+
+          if (!to || !subject || !message) {
+            sendJson(res, 400, { error: 'Missing email recipient, subject, or message.' });
+            return;
+          }
+
+          const result = await sendTransactionalEmail({
+            to,
+            subject,
+            html: `<div style="font-family: Georgia, serif; color: #1f2421; line-height: 1.6;"><h2 style="color: #1e3f35;">PAWELLE Sanctuary</h2><p>${escapeHtml(message).replace(/\n/g, '<br/>')}</p></div>`
+          });
+          sendJson(res, 200, { ok: true, ...result });
           return;
         }
 

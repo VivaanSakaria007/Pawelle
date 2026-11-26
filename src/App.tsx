@@ -5,6 +5,7 @@ import { CartProvider } from './features/cart/CartContext';
 import { ThemeProvider } from './components/common/ThemeContext';
 import { ScrollToTop } from './components/common/ScrollToTop';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Layouts (eagerly loaded for shell structure)
 import { PublicLayout } from './layouts/PublicLayout';
@@ -30,6 +31,7 @@ const OrderConfirmationPage = lazy(() => import('./pages/shop/OrderConfirmationP
 const BookingPage = lazy(() => import('./pages/booking/BookingPage').then(m => ({ default: m.BookingPage })));
 const ComingSoonPage = lazy(() => import('./pages/public/ComingSoonPage').then(m => ({ default: m.ComingSoonPage })));
 const MaintenancePage = lazy(() => import('./pages/public/MaintenancePage').then(m => ({ default: m.MaintenancePage })));
+const LegalPage = lazy(() => import('./pages/public/LegalPage').then(m => ({ default: m.LegalPage })));
 const NotFoundPage = lazy(() => import('./pages/public/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // Auth Pages
@@ -119,48 +121,52 @@ const PageLoadingFallback: React.FC = () => (
 
 export const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <BrowserRouter>
-            {/* Global Route Scroll Restoration */}
-            <ScrollToTop />
-            
-            <Suspense fallback={<PageLoadingFallback />}>
-              <Routes>
-                {/* Public Website Routes */}
-                <Route element={<PublicLayout />}>
-                  <Route path="/" element={<Homepage1 />} />
-                  <Route path="/niche-spa" element={<Homepage2 />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/services" element={<ServicesPage />} />
-                  <Route path="/services/:slug" element={<ServiceDetailPage />} />
-                  <Route path="/pricing" element={<PricingPage />} />
-                  <Route path="/blog" element={<BlogPage />} />
-                  <Route path="/blog/:slug" element={<BlogPostPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/shop" element={<ShopPage />} />
-                  <Route path="/shop/:slug" element={<ProductDetailPage />} />
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route
-                    path="/checkout"
-                    element={
-                      <ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}>
-                        <CheckoutPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/order-confirmation/:id"
-                    element={
-                      <ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}>
-                        <OrderConfirmationPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="/booking" element={<BookingRedirect />} />
-                  <Route path="/coming-soon" element={<ComingSoonPage />} />
-                  <Route path="/maintenance" element={<MaintenancePage />} />
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <CartProvider>
+            <BrowserRouter>
+              {/* Global Route Scroll Restoration */}
+              <ScrollToTop />
+              
+              <Suspense fallback={<PageLoadingFallback />}>
+                <Routes>
+                  {/* Public Website Routes */}
+                  <Route element={<PublicLayout />}>
+                    <Route path="/" element={<Homepage1 />} />
+                    <Route path="/niche-spa" element={<Homepage2 />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/services" element={<ServicesPage />} />
+                    <Route path="/services/:slug" element={<ServiceDetailPage />} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/blog" element={<BlogPage />} />
+                    <Route path="/blog/:slug" element={<BlogPostPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/shop" element={<ShopPage />} />
+                    <Route path="/shop/:slug" element={<ProductDetailPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route
+                      path="/checkout"
+                      element={
+                        <ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}>
+                          <CheckoutPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/order-confirmation/:id"
+                      element={
+                        <ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}>
+                          <OrderConfirmationPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/booking" element={<BookingRedirect />} />
+                    <Route path="/coming-soon" element={<ComingSoonPage />} />
+                    <Route path="/maintenance" element={<MaintenancePage />} />
+                    <Route path="/privacy" element={<LegalPage docType="privacy" />} />
+                    <Route path="/terms" element={<LegalPage docType="terms" />} />
+                    <Route path="/cancellation-policy" element={<LegalPage docType="cancellation" />} />
 
                   {/* Auth Routes */}
                   <Route path="/login" element={<LoginPage />} />
@@ -236,6 +242,7 @@ export const App: React.FC = () => {
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 

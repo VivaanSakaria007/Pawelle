@@ -13,6 +13,7 @@ export const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
@@ -182,7 +183,7 @@ export const RegisterPage: React.FC = () => {
               <div style={{ position: 'relative' }}>
                 <input
                   id="reg-password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   minLength={8}
                   autoComplete="new-password"
@@ -194,6 +195,34 @@ export const RegisterPage: React.FC = () => {
                 />
                 <Lock size={16} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', insetInlineStart: '12px', color: 'var(--color-text-secondary)' }} />
               </div>
+              <label
+                htmlFor="show-reg-password"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginTop: '10px',
+                  fontSize: '0.85rem',
+                  color: 'var(--color-text-secondary)',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+              >
+                <input
+                  id="show-reg-password"
+                  type="checkbox"
+                  checked={showPassword}
+                  onChange={(e) => setShowPassword(e.target.checked)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    accentColor: 'var(--color-forest)',
+                    cursor: 'pointer',
+                    margin: 0
+                  }}
+                />
+                <span>Show password</span>
+              </label>
             </div>
 
             <button

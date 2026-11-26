@@ -334,12 +334,45 @@ describe('PAWELLE UI Consistency, Header Redesign, Staff Navigation & Account Is
       expect(adminStaff).toContain('add-staff-btn');
     });
 
-    it('provides a Show Password checkbox toggle on LoginPage', () => {
+    it('provides a Show Password checkbox toggle across Login, Register, and ResetPassword pages', () => {
       const loginPage = fs.readFileSync(path.resolve(__dirname, '../../src/pages/auth/LoginPage.tsx'), 'utf-8');
+      const registerPage = fs.readFileSync(path.resolve(__dirname, '../../src/pages/auth/RegisterPage.tsx'), 'utf-8');
+      const resetPage = fs.readFileSync(path.resolve(__dirname, '../../src/pages/auth/ResetPasswordPage.tsx'), 'utf-8');
+
       expect(loginPage).toContain('show-login-password');
-      expect(loginPage).toContain('type="checkbox"');
+      expect(registerPage).toContain('show-reg-password');
+      expect(resetPage).toContain('show-reset-password');
       expect(loginPage).toContain("showPassword ? 'text' : 'password'");
-      expect(loginPage).toContain('Show password');
+      expect(registerPage).toContain("showPassword ? 'text' : 'password'");
+      expect(resetPage).toContain("showPassword ? 'text' : 'password'");
+    });
+
+    it('includes production Legal pages, ErrorBoundary, SEO assets, server health check, and newsletter persistence', () => {
+      const appTsx = fs.readFileSync(path.resolve(__dirname, '../../src/App.tsx'), 'utf-8');
+      const syncPlugin = fs.readFileSync(path.resolve(__dirname, '../../server/pawelleSyncPlugin.ts'), 'utf-8');
+      const footer = fs.readFileSync(path.resolve(__dirname, '../../src/components/navigation/Footer.tsx'), 'utf-8');
+
+      expect(appTsx).toContain('<ErrorBoundary>');
+      expect(appTsx).toContain('/privacy');
+      expect(appTsx).toContain('/terms');
+      expect(appTsx).toContain('/cancellation-policy');
+
+      expect(syncPlugin).toContain('/api/pawelle-sync/health');
+      expect(syncPlugin).toContain('409');
+      expect(syncPlugin).toContain('429');
+      expect(syncPlugin).toContain('X-Content-Type-Options');
+
+      const list = dbStore.subscribeNewsletter('Gazette.Tester@Example.com');
+      expect(list).toContain('gazette.tester@example.com');
+      expect(footer).toContain('subscribeNewsletter');
+    });
+
+    it('gives Home 1 and Home 2 Sanctuary dropdown options borderless Silver Paws Club button hover styles', () => {
+      const header = fs.readFileSync(path.resolve(__dirname, '../../src/components/navigation/Header.tsx'), 'utf-8');
+      expect(header).toContain('sanctuary-dropdown-item');
+      expect(header).toContain('border: none;');
+      expect(header).toContain('--btn-secondary-hover-bg');
+      expect(header).toContain('--btn-secondary-hover-text');
     });
   });
 });

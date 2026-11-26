@@ -21,7 +21,7 @@ export interface AuthContextType {
   register: (email: string, password: string, fullName: string, phone?: string) => Promise<{ needsEmailConfirmation?: boolean }>;
   logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
-  completePasswordReset: (newPassword: string) => Promise<void>;
+  completePasswordReset: (newPassword: string, token?: string) => Promise<void>;
   updateProfile: (updates: PermittedProfileUpdates) => Promise<void>;
   isMockEnvironment: boolean;
 }
@@ -542,18 +542,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
         if (error) throw error;
       } else {
-        // Offline sandbox simulation: verify email exists
-        const registeredUsersKey = 'pawelle_sandbox_registered_users';
-        let customUsers: Record<string, any> = {};
-        try {
-          const stored = localStorage.getItem(registeredUsersKey);
-          if (stored) customUsers = JSON.parse(stored);
-        } catch {
-          // ignore
-        }
-        if (!customUsers[cleanEmail] && !SANDBOX_ACCOUNTS[cleanEmail]) {
-          // To prevent user enumeration in production, we still return gracefully,
-          // but simulate success
+        if (typeof window !== 'undefined' && typeof fetch === 'function' && /^https?:/.test(window.location?.origin || '')) {
+          await fetch('/api/pawelle-sync/auth/request-reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: cleanEmail, origin: window.location.origin })
+          }).catch(() => {});
         }
       }
     } catch (err: any) {
@@ -565,7 +559,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Password Reset Completion
-  const completePasswordReset = async (newPassword: string) => {
+  const completePasswordReset = async (newPassword: string, token?: string) => {
     setIsLoading(true);
     setAuthError(null);
 
@@ -579,19 +573,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const { error } = await supabase.auth.updateUser({ password: newPassword });
         if (error) throw error;
       } else {
-        if (!user) throw new Error('No active password reset session found.');
-        // Update sandbox stored password
-        const registeredUsersKey = 'pawelle_sandbox_registered_users';
-        let customUsers: Record<string, any> = {};
-        try {
-          const stored = localStorage.getItem(registeredUsersKey);
-          if (stored) customUsers = JSON.parse(stored);
-          if (customUsers[user.email]) {
-            customUsers[user.email].passwordHash = newPassword;
-            localStorage.setItem(registeredUsersKey, JSON.stringify(customUsers));
+        const cleanToken = token?.trim();
+        if (!user && !cleanToken) {
+          throw new Error('No active password reset session or recovery token found.');
+        }
+
+        if (typeof window !== 'undefined' && typeof fetch === 'function' && /^https?:/.test(window.location?.origin || '')) {
+          const resp = await fetch('/api/pawelle-sync/auth/complete-reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              newPassword,
+              ...(cleanToken ? { token: cleanToken } : {}),
+              ...(user?.email ? { email: user.email } : {})
+            })
+          });
+          if (!resp.ok && cleanToken) {
+            const payload = await resp.json().catch(() => null);
+            throw new Error(payload?.error || 'Invalid or expired reset link.');
           }
-        } catch {
-          // ignore
+        }
+
+        // Update offline sandbox stored password when signed in locally
+        if (user?.email) {
+          const registeredUsersKey = 'pawelle_sandbox_registered_users';
+          try {
+            const stored = localStorage.getItem(registeredUsersKey);
+            if (stored) {
+              const customUsers = JSON.parse(stored);
+              if (customUsers[user.email]) {
+                customUsers[user.email].passwordHash = newPassword;
+                localStorage.setItem(registeredUsersKey, JSON.stringify(customUsers));
+              }
+            }
+          } catch {
+            // ignore
+          }
         }
       }
     } catch (err: any) {

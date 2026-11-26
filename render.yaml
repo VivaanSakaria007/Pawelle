@@ -5,6 +5,7 @@ services:
     plan: free
     buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
+    healthCheckPath: /api/pawelle-sync/health
     envVars:
       - key: PORT
         value: 10000

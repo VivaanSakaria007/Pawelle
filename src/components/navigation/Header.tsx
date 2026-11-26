@@ -700,17 +700,7 @@ export const Header: React.FC = () => {
                   to="/"
                   role="menuitem"
                   onClick={() => setHomeDropdownOpen(false)}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.875rem',
-                    color: location.pathname === '/' ? 'var(--color-forest)' : 'var(--color-text-primary)',
-                    fontWeight: location.pathname === '/' ? 600 : 400,
-                    backgroundColor: location.pathname === '/' ? 'var(--color-forest-soft)' : 'transparent',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px'
-                  }}
+                  className={`sanctuary-dropdown-item ${location.pathname === '/' ? 'is-active' : ''}`}
                 >
                   <span style={{ fontWeight: 600 }}>Mayfair Flagship Atelier</span>
                   <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
@@ -721,17 +711,7 @@ export const Header: React.FC = () => {
                   to="/niche-spa"
                   role="menuitem"
                   onClick={() => setHomeDropdownOpen(false)}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: '0.875rem',
-                    color: location.pathname === '/niche-spa' ? 'var(--color-forest)' : 'var(--color-text-primary)',
-                    fontWeight: location.pathname === '/niche-spa' ? 600 : 400,
-                    backgroundColor: location.pathname === '/niche-spa' ? 'var(--color-forest-soft)' : 'transparent',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px'
-                  }}
+                  className={`sanctuary-dropdown-item ${location.pathname === '/niche-spa' ? 'is-active' : ''}`}
                 >
                   <span style={{ fontWeight: 600 }}>Feline &amp; Canine Spa Retreat</span>
                   <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
@@ -933,11 +913,11 @@ export const Header: React.FC = () => {
             <Link
               to="/"
               onClick={() => setMobileMenuOpen(false)}
+              className={`sanctuary-dropdown-item sanctuary-mobile-item ${location.pathname === '/' ? 'is-active' : ''}`}
               style={{
-                fontSize: '1.1rem',
+                fontSize: '1.05rem',
                 fontWeight: 500,
-                color: location.pathname === '/' ? 'var(--color-forest)' : 'var(--color-text-primary)',
-                display: 'flex',
+                flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}
@@ -948,11 +928,11 @@ export const Header: React.FC = () => {
             <Link
               to="/niche-spa"
               onClick={() => setMobileMenuOpen(false)}
+              className={`sanctuary-dropdown-item sanctuary-mobile-item ${location.pathname === '/niche-spa' ? 'is-active' : ''}`}
               style={{
-                fontSize: '1.1rem',
+                fontSize: '1.05rem',
                 fontWeight: 500,
-                color: location.pathname === '/niche-spa' ? 'var(--color-forest)' : 'var(--color-text-primary)',
-                display: 'flex',
+                flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}
@@ -1101,6 +1081,34 @@ export const Header: React.FC = () => {
         .header-menu-item:hover {
           background-color: var(--color-forest-soft);
           color: var(--color-forest);
+        }
+        .sanctuary-dropdown-item {
+          padding: 10px 14px;
+          border-radius: var(--radius-sm);
+          font-size: 0.875rem;
+          color: var(--color-text-primary);
+          font-weight: 400;
+          background-color: transparent;
+          border: none;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          cursor: pointer;
+          transition: background-color var(--transition-fast), color var(--transition-fast), transform 120ms ease;
+        }
+        .sanctuary-dropdown-item.is-active {
+          color: var(--color-forest);
+          font-weight: 600;
+          background-color: var(--color-bg-subtle);
+        }
+        .sanctuary-dropdown-item:hover,
+        .sanctuary-dropdown-item:focus-visible {
+          background-color: var(--btn-secondary-hover-bg);
+          color: var(--btn-secondary-hover-text);
+          outline: none;
+        }
+        .sanctuary-dropdown-item:active {
+          transform: scale(0.985);
         }
         @media (min-width: 960px) {
           .desktop-nav {

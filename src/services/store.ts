@@ -608,6 +608,7 @@ class PawelleStore {
     }
   ]);
   private customers: UserProfile[] = loadAndMergeCustomers(this.appointments);
+  private newsletterSubscribers: string[] = loadState('newsletter_subscribers', []);
   private syncRevision: number = 0;
   private broadcastChannel: BroadcastChannel | null = null;
   private eventSource: EventSource | null = null;
@@ -743,6 +744,10 @@ class PawelleStore {
           this.blogPosts = collections.blog_posts as BlogPost[];
           saveState('blog_posts', this.blogPosts);
         }
+        if (Array.isArray(collections.newsletter_subscribers)) {
+          this.newsletterSubscribers = collections.newsletter_subscribers as string[];
+          saveState('newsletter_subscribers', this.newsletterSubscribers);
+        }
         if (Array.isArray(collections.customers)) {
           this.customers = loadAndMergeCustomers(this.appointments);
           const mergedById = new Map<string, UserProfile>();
@@ -795,6 +800,10 @@ class PawelleStore {
       body: JSON.stringify({ op, key, ...options })
     })
       .then(async res => {
+        if (res.status === 409) {
+          void this.pullFromSyncServer();
+          return;
+        }
         if (!res.ok) return;
         const body = await res.json().catch(() => null);
         if (body && typeof body.revision === 'number') {
@@ -804,6 +813,16 @@ class PawelleStore {
       .catch(() => {
         // Offline/static fallback
       });
+  }
+
+  private dispatchNotificationEmail(to: string | undefined, subject: string, message: string): void {
+    if (!to || !to.includes('@') || !this.canUseBrowserSync()) return;
+    void fetch('/api/pawelle-sync/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({ to, subject, message })
+    }).catch(() => {});
   }
 
   subscribe(listener: () => void): () => void {
@@ -1392,8 +1411,32 @@ class PawelleStore {
     const updated = this.contactMessages.find(m => m.id === id);
     if (!updated) throw new Error(`Inquiry ${id} not found`);
     this.pushSyncAction('upsert', 'contact_messages', { item: updated, initialItems: prev });
+    this.dispatchNotificationEmail(
+      updated.email,
+      `Re: ${updated.subject} — PAWELLE Concierge`,
+      `Hello ${updated.name},\n\n${cleanReply}\n\nWarm regards,\n${repliedBy}`
+    );
     this.notifyChange();
     return { ...updated };
+  }
+
+  // Newsletter Subscriptions
+  getNewsletterSubscribers(): string[] {
+    return [...this.newsletterSubscribers];
+  }
+
+  subscribeNewsletter(email: string): string[] {
+    const clean = email.trim().toLowerCase();
+    if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+      throw new Error('Please enter a valid email address.');
+    }
+    if (!this.newsletterSubscribers.includes(clean)) {
+      this.newsletterSubscribers = [clean, ...this.newsletterSubscribers];
+      saveState('newsletter_subscribers', this.newsletterSubscribers);
+      this.pushSyncAction('replace', 'newsletter_subscribers', { data: this.newsletterSubscribers });
+      this.notifyChange();
+    }
+    return [...this.newsletterSubscribers];
   }
 
   // Blog
