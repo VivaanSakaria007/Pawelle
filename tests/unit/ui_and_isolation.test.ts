@@ -333,5 +333,13 @@ describe('PAWELLE UI Consistency, Header Redesign, Staff Navigation & Account Is
       expect(adminMessages).toContain('replyToContactMessage');
       expect(adminStaff).toContain('add-staff-btn');
     });
+
+    it('provides a Show Password checkbox toggle on LoginPage', () => {
+      const loginPage = fs.readFileSync(path.resolve(__dirname, '../../src/pages/auth/LoginPage.tsx'), 'utf-8');
+      expect(loginPage).toContain('show-login-password');
+      expect(loginPage).toContain('type="checkbox"');
+      expect(loginPage).toContain("showPassword ? 'text' : 'password'");
+      expect(loginPage).toContain('Show password');
+    });
   });
 });
